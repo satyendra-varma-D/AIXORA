@@ -1,0 +1,10 @@
+{
+  "description": "Run is a fitness tracking web app designed for athletes and fitness enthusiasts to monitor their running performance, set goals, and analyze progress.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
