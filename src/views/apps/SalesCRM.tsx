@@ -5,7 +5,7 @@ import {
   MapPin, Settings as SettingsIcon, CheckCircle, AlertTriangle, 
   Zap, Share2, Trash2, Edit3, Archive, Copy, Clock, MessageSquare, 
   Layers, Download, RefreshCw, BarChart2, ShieldAlert, Award,
-  ChevronLeft
+  ChevronLeft, Bell, Play, Check, X, Shield, Settings2, HelpCircle
 } from "lucide-react";
 import { 
   LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
@@ -17,10 +17,10 @@ import {
 // ==========================================
 
 const INITIAL_LEADS = [
-  { id: "LD-01", name: "Rian Pratama", company: "IndoAgri Perkasa", email: "rian.p@indoagri.co.id", phone: "+62 811 555 129", status: "Qualified", score: 94, source: "Web Demo Request", owner: "Sarah Chen", date: "2026-02-01", aiRemark: "Active Palm Oil processor expanding refining capacity. Legacy ERP target." },
-  { id: "LD-02", name: "Nurul Aini", company: "Bumi Lestari Refineries", email: "nurul.aini@lestari.com", phone: "+62 812 555 832", status: "Prospecting", score: 82, source: "LinkedIn Outreach", owner: "Michael Jones", date: "2026-02-03", aiRemark: "Refining Director exploring automated yield tracking systems." },
-  { id: "LD-03", name: "Sanjay Kumar", company: "Borneo Oils & Fats", email: "s.kumar@borneooils.my", phone: "+60 12 555 744", status: "Contacted", score: 76, source: "Industry Event", owner: "Sarah Chen", date: "2026-02-04", aiRemark: "Interested in cloud-based ERP logistics models." },
-  { id: "LD-04", name: "Dewi Susanti", company: "Sumatra Palm Refinery", email: "dewi.s@sumatrapalm.co.id", phone: "+62 813 555 901", status: "Unqualified", score: 45, source: "Cold Call", owner: "Raj Patel", date: "2026-02-02", aiRemark: "Small local mill below our $10M annual revenue threshold." }
+  { id: "LD-01", name: "Rian Pratama", company: "IndoAgri Perkasa", email: "rian.p@indoagri.co.id", phone: "+62 811 555 129", status: "Qualified", score: 94, source: "Web Demo Request", owner: "Sarah Chen", date: "2026-02-01", aiRemark: "Active Palm Oil processor expanding refining capacity. Legacy ERP target.", industry: "Agriculture", region: "APAC" },
+  { id: "LD-02", name: "Nurul Aini", company: "Bumi Lestari Refineries", email: "nurul.aini@lestari.com", phone: "+62 812 555 832", status: "Prospecting", score: 82, source: "LinkedIn Outreach", owner: "Michael Jones", date: "2026-02-03", aiRemark: "Refining Director exploring automated yield tracking systems.", industry: "Refining", region: "APAC" },
+  { id: "LD-03", name: "Sanjay Kumar", company: "Borneo Oils & Fats", email: "s.kumar@borneooils.my", phone: "+60 12 555 744", status: "Contacted", score: 76, source: "Industry Event", owner: "Sarah Chen", date: "2026-02-04", aiRemark: "Interested in cloud-based ERP logistics models.", industry: "Food Production", region: "APAC" },
+  { id: "LD-04", name: "Dewi Susanti", company: "Sumatra Palm Refinery", email: "dewi.s@sumatrapalm.co.id", phone: "+62 813 555 901", status: "Unqualified", score: 45, source: "Cold Call", owner: "Raj Patel", date: "2026-02-02", aiRemark: "Small local mill below our $10M annual revenue threshold.", industry: "Agriculture", region: "APAC" }
 ];
 
 const INITIAL_ACCOUNTS = [
@@ -69,6 +69,18 @@ const LEADERBOARD = [
   { rank: 3, name: "Raj Patel", dealsClosed: 8, val: "$1.4M", target: "$1.5M", pct: 93 }
 ];
 
+const DEFAULT_AUTOMATIONS = [
+  { id: "AUTO-01", name: "Auto-Assign IndoAgri Leads", trigger: "Lead region = APAC & Company contains IndoAgri", action: "Assign to Sarah Chen", active: true },
+  { id: "AUTO-02", name: "Large Quote Review Workflow", trigger: "Quotation Value > $200K", action: "Notify VP IT / Sales Manager", active: true },
+  { id: "AUTO-03", name: "Stale Deal Follow-up reminder", trigger: "Deal inactive > 14 Days", action: "Create High-priority follow-up task", active: false }
+];
+
+const DEFAULT_NOTIFICATIONS = [
+  { id: "NOT-01", title: "Deal at Risk (Bumi Lestari)", desc: "Yield Automation deal closing targets missed.", type: "warning", time: "10m ago" },
+  { id: "NOT-02", title: "New Demo Lead Assigned", desc: "Nurul Aini assigned to your pipeline routing.", type: "info", time: "1h ago" },
+  { id: "NOT-03", title: "Quotation Approved", desc: "QT-2026-01 for IndoAgri Perkasa approved by VP.", type: "success", time: "Yesterday" }
+];
+
 // ==========================================
 // MAIN APP COMPONENT
 // ==========================================
@@ -83,6 +95,8 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
   const [opportunities, setOpportunities] = useState<any[]>(INITIAL_OPPORTUNITIES);
   const [activities, setActivities] = useState<any[]>(INITIAL_ACTIVITIES);
   const [quotes, setQuotes] = useState<any[]>(INITIAL_QUOTES);
+  const [automations, setAutomations] = useState<any[]>(DEFAULT_AUTOMATIONS);
+  const [notifications, setNotifications] = useState<any[]>(DEFAULT_NOTIFICATIONS);
 
   // Selection States
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
@@ -95,8 +109,20 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
   const [activeDetailTab, setActiveDetailTab] = useState<string>("overview");
 
   // Form Drawers
-  const [drawerMode, setDrawerMode] = useState<"lead" | "account" | "contact" | "opportunity" | "quote" | null>(null);
+  const [drawerMode, setDrawerMode] = useState<"lead" | "account" | "contact" | "opportunity" | "quote" | "automation" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Advanced Filters
+  const [activeSavedView, setActiveSavedView] = useState("All Records");
+  const [savedViews, setSavedViews] = useState<string[]>(["All Records", "High AI Match Score", "Pending Review"]);
+
+  // Global search
+  const [globalSearch, setGlobalSearch] = useState("");
+
+  // Inline editing row identifier
+  const [inlineEditRowId, setInlineEditRowId] = useState<string | null>(null);
+  const [inlineEditData, setInlineEditData] = useState<any>({});
 
   // Bulk selections
   const [bulkIds, setBulkIds] = useState<string[]>([]);
@@ -118,7 +144,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
   // Drawer form inputs (dynamic mappings)
   const [formData, setFormData] = useState<any>({});
 
-  const handleOpenCreate = (type: "lead" | "account" | "contact" | "opportunity" | "quote") => {
+  const handleOpenCreate = (type: "lead" | "account" | "contact" | "opportunity" | "quote" | "automation") => {
     setFormData({});
     setDrawerMode(type);
   };
@@ -137,9 +163,20 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
         source: formData.source || "Direct Search",
         owner: "Sarah Chen",
         date: new Date().toISOString().split("T")[0],
-        aiRemark: "New lead initialized through Sales CRM UI."
+        aiRemark: "New lead initialized through Sales CRM UI.",
+        industry: "General",
+        region: "APAC"
       };
       setLeads(prev => [newLead, ...prev]);
+      
+      // Auto-assign automation simulation
+      const matchedAuto = automations.find(a => a.active && newLead.company.toLowerCase().includes("indoagri"));
+      if (matchedAuto) {
+        setNotifications(prev => [
+          { id: `NOT-${Date.now()}`, title: "Lead Auto-Assigned", desc: `${newLead.name} assigned to Sarah Chen via rule: ${matchedAuto.name}`, type: "success", time: "Just Now" },
+          ...prev
+        ]);
+      }
       setNotification("Success: Lead created successfully!");
     } else if (drawerMode === "account") {
       const newAcc = {
@@ -186,19 +223,37 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       setOpportunities(prev => [newOpp, ...prev]);
       setNotification("Success: Opportunity generated!");
     } else if (drawerMode === "quote") {
+      const valueNum = parseFloat((formData.value || "$0").replace(/[^0-9.]/g, ""));
       const newQuote = {
         id: `QT-2026-0${quotes.length + 1}`,
         company: formData.company || "Bumi Lestari Refineries",
         value: formData.value || "$120,000",
         discount: "None",
         tax: "$12,000",
-        status: "Draft",
+        status: valueNum > 200000 ? "Pending Approval" : "Approved",
         date: new Date().toISOString().split("T")[0],
         version: "v1.0",
         products: formData.products || "Core Services Pack"
       };
       setQuotes(prev => [newQuote, ...prev]);
+
+      if (valueNum > 200000) {
+        setNotifications(prev => [
+          { id: `NOT-${Date.now()}`, title: "Large Quote Review Triggered", desc: `Quote for ${newQuote.company} requires manager approval due to value threshold.`, type: "warning", time: "Just Now" },
+          ...prev
+        ]);
+      }
       setNotification("Success: Quotation draft initialized!");
+    } else if (drawerMode === "automation") {
+      const newAuto = {
+        id: `AUTO-0${automations.length + 1}`,
+        name: formData.name || "Custom Action Rule",
+        trigger: formData.trigger || "System Event",
+        action: formData.action || "Trigger Alert",
+        active: true
+      };
+      setAutomations(prev => [...prev, newAuto]);
+      setNotification("Success: Workflow rule created!");
     }
     setDrawerMode(null);
   };
@@ -218,6 +273,19 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
     }, 1000);
   };
 
+  // Global search filtering across entities
+  const getGlobalSearchResults = () => {
+    if (!globalSearch.trim()) return null;
+    const query = globalSearch.toLowerCase();
+    return {
+      leads: leads.filter(l => l.name.toLowerCase().includes(query) || l.company.toLowerCase().includes(query)),
+      accounts: accounts.filter(a => a.name.toLowerCase().includes(query) || a.industry.toLowerCase().includes(query)),
+      opportunities: opportunities.filter(o => o.name.toLowerCase().includes(query) || o.company.toLowerCase().includes(query))
+    };
+  };
+
+  const results = getGlobalSearchResults();
+
   return (
     <div style={{ flex: 1, color: "#F9FAFB", fontFamily: "'Inter', sans-serif" }}>
       
@@ -231,6 +299,117 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
         }}>
           <CheckCircle size={18} />
           {notification}
+        </div>
+      )}
+
+      {/* Global Command Bar & Notification Bell */}
+      <div style={{ padding: "16px 28px 0", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", pb: 16 }}>
+        {/* Global Search */}
+        <div style={{ position: "relative", width: 420 }}>
+          <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4B5563" }} />
+          <input 
+            value={globalSearch} 
+            onChange={e => setGlobalSearch(e.target.value)} 
+            placeholder="Global Search across Leads, Accounts, Opportunities..." 
+            style={{ width: "100%", padding: "10px 14px 10px 42px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff", fontSize: 13, outline: "none" }} 
+          />
+          {globalSearch && (
+            <button onClick={() => setGlobalSearch("")} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 12 }}>Clear</button>
+          )}
+        </div>
+
+        {/* Saved View Switcher */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "#6B7280" }}>Saved View:</span>
+            <select 
+              value={activeSavedView} 
+              onChange={e => {
+                setActiveSavedView(e.target.value);
+                setNotification(`Switched View: ${e.target.value}`);
+              }} 
+              style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff", fontSize: 12, outline: "none" }}
+            >
+              {savedViews.map(sv => <option key={sv} value={sv} style={{ background: "#111827" }}>{sv}</option>)}
+            </select>
+          </div>
+
+          {/* Notifications Trigger */}
+          <div style={{ position: "relative" }}>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, width: 38, height: 38, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#9CA3AF" }}
+            >
+              <Bell size={18} />
+              {notifications.length > 0 && <span style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: "50%", background: "#EF4444" }} />}
+            </button>
+
+            {showNotifications && (
+              <>
+                <div style={{ position: "fixed", inset: 0, zIndex: 90 }} onClick={() => setShowNotifications(false)} />
+                <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 340, background: "#1f2937", border: "1px solid var(--color-border)", borderRadius: 12, padding: 16, zIndex: 100, boxShadow: "0 15px 35px rgba(0,0,0,0.5)" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 8, marginBottom: 12 }}>Global CRM Notifications</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {notifications.map(n => (
+                      <div key={n.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: n.type === "warning" ? "#EF4444" : n.type === "success" ? "#10B981" : "#38BDF8", marginTop: 6 }} />
+                        <div style={{ flex: 1 }}>
+                          <strong style={{ fontSize: 12, color: "#fff" }}>{n.title}</strong>
+                          <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>{n.desc}</p>
+                          <span style={{ fontSize: 9, color: "#6B7280", marginTop: 4, display: "block" }}>{n.time}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Global Search Results overlay */}
+      {globalSearch.trim() && results && (
+        <div style={{ padding: "24px 28px", background: "rgba(22,27,38,0.95)", borderBottom: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase" }}>Search Results for "{globalSearch}"</h3>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }}>
+            <div>
+              <h4 style={{ fontSize: 12, color: "#6B7280", textTransform: "uppercase", marginBottom: 10 }}>Leads Matches ({results.leads.length})</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {results.leads.map(l => (
+                  <div key={l.id} onClick={() => { setSelectedLead(l); setGlobalSearch(""); }} style={{ padding: 10, background: "rgba(255,255,255,0.02)", border: "1px solid var(--color-border)", borderRadius: 8, cursor: "pointer" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{l.name}</div>
+                    <div style={{ fontSize: 11, color: "#6B7280" }}>{l.company}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: 12, color: "#6B7280", textTransform: "uppercase", marginBottom: 10 }}>Accounts Matches ({results.accounts.length})</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {results.accounts.map(a => (
+                  <div key={a.id} onClick={() => { setSelectedAccount(a); setGlobalSearch(""); }} style={{ padding: 10, background: "rgba(255,255,255,0.02)", border: "1px solid var(--color-border)", borderRadius: 8, cursor: "pointer" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{a.name}</div>
+                    <div style={{ fontSize: 11, color: "#6B7280" }}>{a.industry}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: 12, color: "#6B7280", textTransform: "uppercase", marginBottom: 10 }}>Opportunities Matches ({results.opportunities.length})</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {results.opportunities.map(o => (
+                  <div key={o.id} onClick={() => { setSelectedOpportunity(o); setGlobalSearch(""); }} style={{ padding: 10, background: "rgba(255,255,255,0.02)", border: "1px solid var(--color-border)", borderRadius: 8, cursor: "pointer" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{o.name}</div>
+                    <div style={{ fontSize: 11, color: "#6B7280" }}>{o.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -388,10 +567,37 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
             </button>
           </div>
 
-          {/* Search bar */}
-          <div style={{ position: "relative", maxWidth: 360 }}>
-            <Search size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#4B5563" }} />
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search leads by name or company..." style={{ width: "100%", padding: "8px 12px 8px 38px", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff", fontSize: 13, outline: "none" }} />
+          {/* Search bar & Bulk Options */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ position: "relative", width: 360 }}>
+              <Search size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#4B5563" }} />
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search leads by name or company..." style={{ width: "100%", padding: "8px 12px 8px 38px", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff", fontSize: 13, outline: "none" }} />
+            </div>
+
+            {bulkIds.length > 0 && (
+              <div style={{ display: "flex", gap: 10 }}>
+                <button 
+                  onClick={() => {
+                    setLeads(prev => prev.map(l => bulkIds.includes(l.id) ? { ...l, status: "Qualified" } : l));
+                    setBulkIds([]);
+                    setNotification("Success: Selected leads marked as Qualified!");
+                  }}
+                  style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(16,185,129,0.15)", border: "1px solid #10B981", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}
+                >
+                  Bulk Approve
+                </button>
+                <button 
+                  onClick={() => {
+                    setLeads(prev => prev.filter(l => !bulkIds.includes(l.id)));
+                    setBulkIds([]);
+                    setNotification("Success: Selected leads deleted!");
+                  }}
+                  style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(239,68,68,0.15)", border: "1px solid #EF4444", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}
+                >
+                  Bulk Delete
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Table list */}
@@ -399,37 +605,79 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
               <thead>
                 <tr style={{ background: "rgba(255,255,255,0.02)", color: "#6B7280" }}>
-                  <th style={{ padding: "12px 16px", width: 40 }}><input type="checkbox" onChange={() => setBulkIds(bulkIds.length === leads.length ? [] : leads.map(l => l.id))} checked={bulkIds.length === leads.length} /></th>
+                  <th style={{ padding: "12px 16px", width: 40 }}><input type="checkbox" onChange={() => setBulkIds(bulkIds.length === leads.length ? [] : leads.map(l => l.id))} checked={bulkIds.length === leads.length && leads.length > 0} /></th>
                   <th style={{ padding: "12px 16px" }}>Lead Name</th>
                   <th style={{ padding: "12px 16px" }}>Company</th>
                   <th style={{ padding: "12px 16px" }}>Email</th>
                   <th style={{ padding: "12px 16px" }}>Source</th>
                   <th style={{ padding: "12px 16px" }}>AI Qualification</th>
                   <th style={{ padding: "12px 16px" }}>Status</th>
-                  <th style={{ padding: "12px 16px" }}>Owner</th>
+                  <th style={{ padding: "12px 16px", textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {leads.filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.company.toLowerCase().includes(searchQuery.toLowerCase())).map(lead => (
-                  <tr key={lead.id} onClick={() => setSelectedLead(lead)} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.01)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <td style={{ padding: "14px 16px" }} onClick={e => { e.stopPropagation(); handleBulkSelect(lead.id); }}><input type="checkbox" checked={bulkIds.includes(lead.id)} readOnly /></td>
-                    <td style={{ padding: "14px 16px", fontWeight: 700, color: "#fff" }}>{lead.name}</td>
-                    <td style={{ padding: "14px 16px" }}>{lead.company}</td>
-                    <td style={{ padding: "14px 16px", color: "#9CA3AF" }}>{lead.email}</td>
-                    <td style={{ padding: "14px 16px", color: "#9CA3AF" }}>{lead.source}</td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: lead.score >= 80 ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color: lead.score >= 80 ? "#10B981" : "#F59E0B" }}>
-                        {lead.score} Score
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 100, background: lead.status === "Qualified" ? "rgba(16,185,129,0.1)" : "rgba(56,189,248,0.1)", color: lead.status === "Qualified" ? "#10B981" : "#38BDF8" }}>
-                        {lead.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px 16px", color: "#9CA3AF" }}>{lead.owner}</td>
-                  </tr>
-                ))}
+                {leads.filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.company.toLowerCase().includes(searchQuery.toLowerCase())).map(lead => {
+                  const isEditing = inlineEditRowId === lead.id;
+                  return (
+                    <tr key={lead.id} onClick={() => !isEditing && setSelectedLead(lead)} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: isEditing ? "default" : "pointer" }} onMouseEnter={e => !isEditing && (e.currentTarget.style.background = "rgba(255,255,255,0.01)")} onMouseLeave={e => !isEditing && (e.currentTarget.style.background = "none")}>
+                      <td style={{ padding: "14px 16px" }} onClick={e => { e.stopPropagation(); handleBulkSelect(lead.id); }}><input type="checkbox" checked={bulkIds.includes(lead.id)} readOnly /></td>
+                      <td style={{ padding: "14px 16px", fontWeight: 700, color: "#fff" }}>
+                        {isEditing ? (
+                          <input value={inlineEditData.name} onChange={e => setInlineEditData({ ...inlineEditData, name: e.target.value })} style={{ background: "rgba(0,0,0,0.2)", border: "1px solid var(--color-border)", color: "#fff", padding: 4, borderRadius: 4, fontSize: 13 }} />
+                        ) : lead.name}
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        {isEditing ? (
+                          <input value={inlineEditData.company} onChange={e => setInlineEditData({ ...inlineEditData, company: e.target.value })} style={{ background: "rgba(0,0,0,0.2)", border: "1px solid var(--color-border)", color: "#fff", padding: 4, borderRadius: 4, fontSize: 13 }} />
+                        ) : lead.company}
+                      </td>
+                      <td style={{ padding: "14px 16px", color: "#9CA3AF" }}>{lead.email}</td>
+                      <td style={{ padding: "14px 16px", color: "#9CA3AF" }}>{lead.source}</td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: lead.score >= 80 ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color: lead.score >= 80 ? "#10B981" : "#F59E0B" }}>
+                          {lead.score} Score
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 100, background: lead.status === "Qualified" ? "rgba(16,185,129,0.1)" : "rgba(56,189,248,0.1)", color: lead.status === "Qualified" ? "#10B981" : "#38BDF8" }}>
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px", textAlign: "right" }} onClick={e => e.stopPropagation()}>
+                        {isEditing ? (
+                          <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                            <button 
+                              onClick={() => {
+                                setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ...inlineEditData } : l));
+                                setInlineEditRowId(null);
+                                setNotification("Success: Lead details updated inline!");
+                              }}
+                              style={{ background: "#10B981", border: "none", color: "#fff", padding: "4px 8px", borderRadius: 4, cursor: "pointer" }}
+                            >
+                              <Check size={12} />
+                            </button>
+                            <button 
+                              onClick={() => setInlineEditRowId(null)}
+                              style={{ background: "#EF4444", border: "none", color: "#fff", padding: "4px 8px", borderRadius: 4, cursor: "pointer" }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => {
+                              setInlineEditRowId(lead.id);
+                              setInlineEditData({ name: lead.name, company: lead.company });
+                            }} 
+                            style={{ background: "none", border: "none", color: "var(--color-primary)", cursor: "pointer" }}
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -717,30 +965,67 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
         </div>
       )}
 
-      {/* 9. SETTINGS MODULE */}
+      {/* 9. SETTINGS & AUTOMATION MODULE */}
       {activeModule === "settings" && (
-        <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 600 }}>
-          <div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 4px" }}>Sales CRM Scoring & Integrations</h2>
-            <p style={{ color: "#6B7280", fontSize: 14, margin: 0 }}>Establish weights for lead scores and configure organization roles.</p>
+        <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 4px" }}>CRM Workflows & Custom Automation</h2>
+              <p style={{ color: "#6B7280", fontSize: 14, margin: 0 }}>Establish active triggers, routing laws, and notification limits.</p>
+            </div>
+            <button onClick={() => handleOpenCreate("automation")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9, background: "linear-gradient(135deg, #5B5CEB, #7C3AED)", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
+              <Plus size={14} /> Add Automation Rule
+            </button>
           </div>
 
-          <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 14, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: 10 }}>Lead Scoring Logic</div>
-            {[
-              { label: "Revenue above $10M threshold", weight: "40 points" },
-              { label: "Target stack matches legacy ERP", weight: "30 points" },
-              { label: "Primary decision maker identified", weight: "20 points" },
-              { label: "APAC region target matching", weight: "10 points" }
-            ].map(setting => (
-              <div key={setting.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: "#D1D5DB" }}>{setting.label}</span>
-                <span style={{ fontSize: 12, color: "var(--color-primary)", fontWeight: 700 }}>{setting.weight}</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 20 }}>
+            {/* Active rules list */}
+            <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 750, color: "#fff", margin: 0 }}>Active Automation Triggers</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {automations.map(auto => (
+                  <div key={auto.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 14, background: "rgba(255,255,255,0.01)", border: "1px solid var(--color-border)", borderRadius: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{auto.name}</div>
+                      <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>Trigger: <span style={{ color: "var(--color-primary)" }}>{auto.trigger}</span></div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Action: {auto.action}</div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setAutomations(prev => prev.map(a => a.id === auto.id ? { ...a, active: !a.active } : a));
+                        setNotification(`Rule status updated: ${auto.name}`);
+                      }}
+                      style={{
+                        padding: "4px 10px", borderRadius: 6, border: "none", fontSize: 11, fontWeight: 650, cursor: "pointer",
+                        background: auto.active ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
+                        color: auto.active ? "#10B981" : "#6B7280"
+                      }}
+                    >
+                      {auto.active ? "Active" : "Disabled"}
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-            <button onClick={() => setNotification("Success: CRM Scoring parameters saved")} style={{ alignSelf: "flex-end", padding: "8px 16px", borderRadius: 8, background: "var(--color-primary)", border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 12 }}>
-              Save parameters
-            </button>
+            </div>
+
+            {/* Custom Field configuration */}
+            <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 750, color: "#fff", margin: 0 }}>Lead Scoring Parameters</h3>
+              {[
+                { label: "Revenue above $10M threshold", weight: "40 points" },
+                { label: "Target stack matches legacy ERP", weight: "30 points" },
+                { label: "Primary decision maker identified", weight: "20 points" },
+                { label: "APAC region target matching", weight: "10 points" }
+              ].map(setting => (
+                <div key={setting.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 13, color: "#D1D5DB" }}>{setting.label}</span>
+                  <span style={{ fontSize: 12, color: "var(--color-primary)", fontWeight: 700 }}>{setting.weight}</span>
+                </div>
+              ))}
+              <button onClick={() => setNotification("Success: CRM Scoring parameters saved")} style={{ alignSelf: "flex-end", padding: "8px 16px", borderRadius: 8, background: "var(--color-primary)", border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 12 }}>
+                Save parameters
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1157,6 +1442,23 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
                   <div style={{ marginBottom: 18 }}>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#D1D5DB", marginBottom: 6 }}>Line Item Products</label>
                     <input type="text" required onChange={e => setFormData({ ...formData, products: e.target.value })} placeholder="e.g. AIXORA Core License (x500)" style={{ width: "100%", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }} />
+                  </div>
+                </>
+              )}
+
+              {drawerMode === "automation" && (
+                <>
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#D1D5DB", marginBottom: 6 }}>Rule Name</label>
+                    <input type="text" required onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Auto-Assign Indonesia" style={{ width: "100%", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }} />
+                  </div>
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#D1D5DB", marginBottom: 6 }}>Trigger Criteria</label>
+                    <input type="text" required onChange={e => setFormData({ ...formData, trigger: e.target.value })} placeholder="e.g. Region = APAC" style={{ width: "100%", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }} />
+                  </div>
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#D1D5DB", marginBottom: 6 }}>Action Output</label>
+                    <input type="text" required onChange={e => setFormData({ ...formData, action: e.target.value })} placeholder="e.g. Assign to Sarah Chen" style={{ width: "100%", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }} />
                   </div>
                 </>
               )}
