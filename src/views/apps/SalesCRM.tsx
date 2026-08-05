@@ -130,6 +130,12 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
   // Simple Notification banner
   const [notification, setNotification] = useState<string | null>(null);
 
+  // Custom Reporting & AI Revenue Intelligence States
+  const [reportAiPrompt, setReportAiPrompt] = useState("");
+  const [aiReportResults, setAiReportResults] = useState<any[] | null>(null);
+  const [customReportType, setCustomReportType] = useState("opportunities");
+  const [customReportMetric, setCustomReportMetric] = useState("sum");
+
   useEffect(() => {
     if (notification) {
       const t = setTimeout(() => setNotification(null), 3000);
@@ -286,6 +292,28 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
 
   const results = getGlobalSearchResults();
 
+  // Natural Language AI Report Engine
+  const executeAiReportPrompt = () => {
+    if (!reportAiPrompt.trim()) return;
+    setAiLoading(true);
+    setTimeout(() => {
+      setAiLoading(false);
+      const query = reportAiPrompt.toLowerCase();
+      if (query.includes("above") || query.includes("value") || query.includes("200")) {
+        // filter opportunities above $200k
+        const filtered = opportunities.filter(opp => {
+          const valNum = parseFloat(opp.value.replace(/[^0-9.]/g, ""));
+          return valNum >= 200; // in thousands
+        });
+        setAiReportResults(filtered);
+        setNotification(`AI Generated: Found ${filtered.length} matching deals above threshold!`);
+      } else {
+        setAiReportResults(opportunities);
+        setNotification("AI Generated: Report compiled!");
+      }
+    }, 800);
+  };
+
   return (
     <div style={{ flex: 1, color: "#F9FAFB", fontFamily: "'Inter', sans-serif" }}>
       
@@ -293,7 +321,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       {notification && (
         <div style={{
           position: "fixed", top: 20, right: 20, zIndex: 10000,
-          background: notification.includes("Success") ? "#10B981" : "#EF4444",
+          background: notification.includes("Success") ? "#10B981" : "#F59E0B",
           color: "#fff", padding: "12px 24px", borderRadius: 8, fontWeight: 700,
           boxShadow: "0 10px 25px rgba(0,0,0,0.3)", display: "flex", gap: 10, alignItems: "center"
         }}>
@@ -303,7 +331,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* Global Command Bar & Notification Bell */}
-      <div style={{ padding: "16px 28px 0", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", pb: 16 }}>
+      <div style={{ padding: "16px 28px 0", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: 16 }}>
         {/* Global Search */}
         <div style={{ position: "relative", width: 420 }}>
           <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4B5563" }} />
@@ -734,7 +762,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* 4. CONTACTS MODULE */}
-      {activeModule === "people" && !selectedContact && (
+      {activeModule === "contacts" && !selectedContact && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -870,7 +898,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* 7. QUOTATIONS MODULE */}
-      {activeModule === "review" && !selectedQuotation && (
+      {activeModule === "quotations" && !selectedQuotation && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -915,51 +943,137 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
         </div>
       )}
 
-      {/* 8. REPORTS MODULE */}
-      {activeModule === "history" && (
-        <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
-          <div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 4px" }}>AI Funnel Reports & Analytics</h2>
-            <p style={{ color: "#6B7280", fontSize: 14, margin: 0 }}>Review conversions, pipeline velocity, and target account analysis.</p>
+      {/* 8. ENTERPRISE AI REVENUE INTELLIGENCE CENTER (REPORTS MODULE REDESIGN) */}
+      {activeModule === "reports" && (
+        <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 28 }}>
+          
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 4px" }}>AI Revenue Intelligence Center</h2>
+              <p style={{ color: "#6B7280", fontSize: 14, margin: 0 }}>Drill-down pipeline metrics, forecast accuracies, and AI-predicted outcomes.</p>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setNotification("Export: Reports package downloaded (PDF)")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, cursor: "pointer" }}>
+                <Download size={14} /> Download Exec Brief
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-            {/* Lead conversion metrics */}
-            <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 16, padding: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#E5E7EB", marginBottom: 16 }}>Lead Acquisition Funnel</div>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={[
-                  { stage: "Scanned", leads: 430 },
-                  { stage: "Qualified", leads: 142 },
-                  { stage: "Contacted", leads: 87 },
-                  { stage: "Opportunities", leads: 12 }
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis dataKey="stage" tick={{ fill: "#6B7280", fontSize: 11 }} />
-                  <YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: "#111827", border: "1px solid var(--color-border)", borderRadius: 8, color: "#fff", fontSize: 12 }} />
-                  <Bar dataKey="leads" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          {/* Natural Language AI Report Builder */}
+          <div style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(217,70,239,0.04))", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Zap size={16} color="var(--color-primary)" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>AI Revenue Query Copilot</span>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <input 
+                value={reportAiPrompt}
+                onChange={e => setReportAiPrompt(e.target.value)}
+                placeholder="Ask: 'Show opportunities above $300K' or 'Pipeline conversion rates this quarter'" 
+                style={{ flex: 1, padding: "12px 14px", borderRadius: 10, background: "rgba(0,0,0,0.2)", border: "1px solid var(--color-border)", color: "#fff", fontSize: 13, outline: "none" }}
+              />
+              <button 
+                onClick={executeAiReportPrompt}
+                style={{ padding: "0 24px", borderRadius: 10, background: "var(--color-primary)", color: "#fff", fontWeight: 750, border: "none", cursor: "pointer", fontSize: 13 }}
+              >
+                Query Engine
+              </button>
             </div>
 
-            {/* Sales performance chart */}
-            <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 16, padding: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#E5E7EB", marginBottom: 16 }}>Opportunity Close Forecast</div>
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={[
-                  { name: "Week 1", value: 1200 },
-                  { name: "Week 2", value: 1800 },
-                  { name: "Week 3", value: 1450 },
-                  { name: "Week 4", value: 2900 }
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis dataKey="name" tick={{ fill: "#6B7280", fontSize: 11 }} />
-                  <YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: "#111827", border: "1px solid var(--color-border)", borderRadius: 8, color: "#fff", fontSize: 12 }} />
-                  <Area type="monotone" dataKey="value" stroke="#10B981" fill="rgba(16,185,129,0.12)" />
-                </AreaChart>
-              </ResponsiveContainer>
+            {aiReportResults && (
+              <div style={{ background: "rgba(0,0,0,0.15)", border: "1px solid var(--color-border)", borderRadius: 10, padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary)" }}>AI GENERATED AD-HOC REPORT</span>
+                  <button onClick={() => setAiReportResults(null)} style={{ background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 12 }}>Close</button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {aiReportResults.map((r: any, idx: number) => (
+                    <div key={idx} style={{ fontSize: 12, color: "#D1D5DB", display: "flex", justifyContent: "space-between" }}>
+                      <span>{r.name || r.company} ({r.company || r.industry})</span>
+                      <strong style={{ color: "#fff" }}>{r.value || r.revenue || "Active"}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Revenue Executive KPIs */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            {[
+              { label: "Total Pipeline Value", value: "$13.2M", change: "+12.4% vs last Q", color: "var(--color-primary)" },
+              { label: "Expected Revenue", value: "$9.8M", change: "74.2% closed rate", color: "#10B981" },
+              { label: "Closed Won Revenue", value: "$5.4M", change: "+18.5% YTD", color: "#00D4FF" },
+              { label: "Average Deal Size", value: "$198K", change: "+$32K YoY", color: "#F59E0B" }
+            ].map((kpi, idx) => (
+              <div key={idx} style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 14, padding: 20 }}>
+                <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 650 }}>{kpi.label}</span>
+                <div style={{ fontSize: 26, fontWeight: 900, color: "#fff", marginTop: 8, letterSpacing: "-0.03em" }}>{kpi.value}</div>
+                <span style={{ fontSize: 11, color: "#10B981", display: "block", marginTop: 4 }}>{kpi.change}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Custom Report Builder Card & Saved Reports */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 20 }}>
+            {/* Custom Builder */}
+            <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 750, color: "#fff", margin: 0 }}>Drag & Drop Custom Report Architect</h3>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, color: "#9CA3AF", marginBottom: 6 }}>Target Object</label>
+                  <select value={customReportType} onChange={e => setCustomReportType(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }}>
+                    <option value="opportunities" style={{ background: "#111827" }}>Opportunities</option>
+                    <option value="leads" style={{ background: "#111827" }}>Leads</option>
+                    <option value="accounts" style={{ background: "#111827" }}>Accounts</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, color: "#9CA3AF", marginBottom: 6 }}>Aggregation Metric</label>
+                  <select value={customReportMetric} onChange={e => setCustomReportMetric(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }}>
+                    <option value="sum" style={{ background: "#111827" }}>Sum Value</option>
+                    <option value="avg" style={{ background: "#111827" }}>Average Score</option>
+                    <option value="count" style={{ background: "#111827" }}>Record Count</option>
+                  </select>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setNotification(`Custom Report compiled for: ${customReportType} (${customReportMetric})`);
+                  if (customReportType === "opportunities") {
+                    setAiReportResults(opportunities);
+                  } else if (customReportType === "leads") {
+                    setAiReportResults(leads);
+                  } else {
+                    setAiReportResults(accounts);
+                  }
+                }}
+                style={{ padding: 10, borderRadius: 8, background: "var(--color-primary)", color: "#fff", border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", alignSelf: "flex-end" }}
+              >
+                Compile Analytics
+              </button>
+            </div>
+
+            {/* Saved View List & Scheduled Reports */}
+            <div style={{ background: "rgba(22,27,38,0.7)", border: "1px solid var(--color-border)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 750, color: "#fff", margin: 0 }}>Active Scheduled Distributions</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { name: "Daily Pipeline Velocity Brief", frequency: "Daily 08:00 AM", channel: "Slack & Email" },
+                  { name: "Monthly Executive Board Report", frequency: "1st of Month", channel: "Teams Webhook" }
+                ].map((sReport, idx) => (
+                  <div key={idx} style={{ padding: 12, background: "rgba(255,255,255,0.01)", border: "1px solid var(--color-border)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{sReport.name}</div>
+                      <span style={{ fontSize: 11, color: "#6B7280", marginTop: 2, display: "block" }}>{sReport.frequency} · Channel: {sReport.channel}</span>
+                    </div>
+                    <button onClick={() => setNotification(`Triggered manual send for: ${sReport.name}`)} style={{ padding: "4px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff", fontSize: 11, cursor: "pointer" }}>Run</button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1231,7 +1345,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ position: "relative" }}>
               <div style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(217,70,239,0.04))", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 24 }}>
                 <div style={{ fontSize: 11, color: "var(--color-primary)", textTransform: "uppercase", fontWeight: 700, marginBottom: 12 }}>Influence & Buying Power</div>
                 <div style={{ fontSize: 44, fontWeight: 900, color: "var(--color-accent)" }}>{selectedContact.score}</div>
