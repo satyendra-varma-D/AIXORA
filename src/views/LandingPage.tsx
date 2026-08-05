@@ -311,44 +311,80 @@ export default function LandingPage({ onNavigate, theme, setTheme }: Props) {
         </div>
       </section>
 
-      {/* POSITIONING (Traditional vs AIXORA) */}
+      {/* POSITIONING (End-to-End SDLC & AIXORA Guarantee) */}
       <section id="positioning" style={{ position: "relative", zIndex: 1, padding: "120px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          
           <div style={{ textAlign: "center", marginBottom: 60 }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Product Positioning</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Value Proposition</span>
             <h2 style={{ fontSize: "clamp(30px, 4.5vw, 54px)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: 8 }}>
-              The Composable Enterprise Core
+              End-to-End Delivery Fabric
             </h2>
+            <p style={{ color: "#6B7280", fontSize: 16, marginTop: 10 }}>We connect the entire business development lifecycle with an ironclad quality standard.</p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
-            <div style={{ background: "rgba(239, 68, 68, 0.02)", border: "1px solid rgba(239, 68, 68, 0.12)", borderRadius: 20, padding: 36 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-                <X size={18} /> Traditional Stack
+            
+            {/* Column 1: SDLC + Market + CRM */}
+            <div style={{ background: "rgba(99, 102, 241, 0.02)", border: "1px solid rgba(99, 102, 241, 0.12)", borderRadius: 20, padding: 36 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--color-primary)", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+                <Layers size={18} /> Unified Pipeline & Execution
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {COMPARISONS.traditional.map((item, idx) => (
-                  <div key={idx} style={{ fontSize: 14, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444" }} />
-                    {item}
-                  </div>
-                ))}
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 750, color: "#fff", marginBottom: 6 }}>1. Autonomous Market & Lead Discovery</h4>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, margin: 0 }}>
+                    Continuously crawl competitor catalogs, identify buyer triggers, score prospects, and push hot accounts directly to your pipeline.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 750, color: "#fff", marginBottom: 6 }}>2. Intelligent Sales & Quotation CRM</h4>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, margin: 0 }}>
+                    Draft quotes automatically, trigger threshold reviews, manage stakeholder committee profiles, and project revenue trends.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 750, color: "#fff", marginBottom: 6 }}>3. Full-Lifecycle SDLC Automation</h4>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, margin: 0 }}>
+                    Move seamlessly from initial discovery sessions to interactive user story backlogs, architecture schemas, and auto-generated codebases.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div style={{ background: "rgba(16, 185, 129, 0.02)", border: "1px solid rgba(16, 185, 129, 0.15)", borderRadius: 20, padding: 36, boxShadow: "0 10px 40px rgba(16, 185, 129, 0.05)" }}>
+            {/* Column 2: The Guarantee */}
+            <div style={{ background: "rgba(16, 185, 129, 0.02)", border: "1px solid rgba(16, 185, 129, 0.15)", borderRadius: 20, padding: 36, boxShadow: "0 10px 40px rgba(16, 185, 129, 0.03)" }}>
               <h3 style={{ fontSize: 18, fontWeight: 800, color: "#10B981", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-                <CheckCircle2 size={18} /> AIXORA Intelligence
+                <Award size={18} /> The AIXORA Quality Guarantee
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {COMPARISONS.aixora.map((item, idx) => (
-                  <div key={idx} style={{ fontSize: 14, color: "#E5E7EB", display: "flex", alignItems: "center", gap: 12, fontWeight: 600 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-                    {item}
-                  </div>
-                ))}
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 750, color: "#fff", marginBottom: 6 }}>Scratch to Launch in Days, Not Months</h4>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, margin: 0 }}>
+                    Establish database schemas, API specs, frontend layouts, and deployment configurations at 10x velocity. Build anything from scratch in record time.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 750, color: "#fff", marginBottom: 6 }}>Uncompromised Enterprise Rigor</h4>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, margin: 0 }}>
+                    We guarantee robust security constraints, clean components, fully automated test suites, and strict audit logs. 
+                  </p>
+                </div>
+
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 16, marginTop: 4 }}>
+                  <span style={{ fontSize: 12, color: "#10B981", fontWeight: 700, display: "block", marginBottom: 4 }}>The Enterprise Advantage:</span>
+                  <p style={{ fontSize: 12, color: "#6B7280", fontStyle: "italic", margin: 0 }}>
+                    Freelance developers, boutique agencies, and mid-sized outsource groups cannot promise or verify this level of unified, continuous architectural quality.
+                  </p>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
