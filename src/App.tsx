@@ -3,6 +3,7 @@ import LandingPage from "./views/LandingPage";
 import AuthPage from "./views/AuthPage";
 import AppHub from "./views/AppHub";
 import DashboardLayout from "./views/DashboardLayout";
+import { setSessionExpiredHandler } from "./imports/api";
 
 export type View = "landing" | "auth" | "hub" | "app";
 export type AppModule =
@@ -20,7 +21,7 @@ export type AppModule =
 export type Theme = "cosmic" | "emerald" | "frost" | "amethyst";
 
 export default function App() {
-  const [view, setView] = useState<View>("landing");
+  const [view, setViewState] = useState<View>("landing");
   const [activeApp, setActiveApp] = useState<AppModule>("market");
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem("aixora-theme");
@@ -31,6 +32,22 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  // Set up global session expiration handler
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      setViewState("auth");
+    });
+  }, []);
+
+  // Protected route guard
+  const setView = (v: View) => {
+    if ((v === "hub" || v === "app") && !localStorage.getItem("aixora_jwt")) {
+      setViewState("auth");
+    } else {
+      setViewState(v);
+    }
+  };
+
   const setTheme = (t: Theme) => {
     setThemeState(t);
     localStorage.setItem("aixora-theme", t);
@@ -40,6 +57,14 @@ export default function App() {
     setView(v);
     if (app) setActiveApp(app);
   };
+
+  // If trying to access dashboard/hub on load but not authenticated, go to auth
+  useEffect(() => {
+    const token = localStorage.getItem("aixora_jwt");
+    if (!token && (view === "hub" || view === "app")) {
+      setViewState("auth");
+    }
+  }, [view]);
 
   if (view === "landing") return <LandingPage onNavigate={navigate} theme={theme} setTheme={setTheme} />;
   if (view === "auth") return <AuthPage onNavigate={navigate} />;

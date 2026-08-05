@@ -16,6 +16,7 @@ import EngineeringStudio from "./apps/EngineeringStudio";
 import QualityStudio from "./apps/QualityStudio";
 import MarketIntelligence from "./apps/MarketIntelligence";
 import GenericAppDashboard from "./apps/GenericAppDashboard";
+import { api } from "../imports/api";
 
 interface Props {
   activeApp: AppModule;
@@ -41,10 +42,10 @@ const APP_CONFIGS = [
 const APP_MODULES: Record<AppModule, { id: string; label: string }[]> = {
   market: [
     { id: "dashboard", label: "Dashboard" },
+    { id: "tasks", label: "Tasks" },
     { id: "campaigns", label: "Research Campaigns" },
-    { id: "companies", label: "Company Directory" },
-    { id: "people", label: "Decision Makers" },
-    { id: "signals", label: "Buying Signals" },
+    { id: "companies", label: "Companies" },
+    { id: "people", label: "Contacts" },
     { id: "review", label: "Qualification Queue" },
     { id: "history", label: "Export History" },
     { id: "settings", label: "Settings" }
@@ -117,6 +118,16 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
   const [aiHistory, setAiHistory] = useState<{ role: "user" | "ai"; text: string }[]>([
     { role: "ai", text: "Hello! I'm your AIXORA AI Assistant. I can help you generate documents, analyze data, create tasks, summarize meetings, and navigate the platform. What would you like to do?" }
   ]);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string }>({ name: "Sarah Chen", email: "sarah@company.com" });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("aixora_user");
+    if (saved) {
+      try {
+        setCurrentUser(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
 
   // Reset active module when app switches
   useEffect(() => {
@@ -384,7 +395,9 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 8px", borderRadius: 8, background: userMenuOpen ? "rgba(255,255,255,0.05)" : "transparent" }}
               >
-                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>SC</div>
+                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
+                  {currentUser.name ? currentUser.name.split(" ").map(n => n[0]).join("").toUpperCase() : "SC"}
+                </div>
                 <ChevronDown size={13} color="#6B7280" />
               </div>
               {userMenuOpen && (
@@ -396,13 +409,14 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
                     textAlign: "left"
                   }}>
                     <div style={{ padding: "6px 8px" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#F9FAFB" }}>Sarah Chen</div>
-                      <div style={{ fontSize: 11, color: "var(--color-text-3)" }}>sarah@company.com</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#F9FAFB" }}>{currentUser.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--color-text-3)" }}>{currentUser.email}</div>
                     </div>
                     <div style={{ height: 1, background: "var(--color-border)", margin: "4px 0" }} />
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setUserMenuOpen(false);
+                        await api.auth.logout();
                         onNavigate("landing");
                       }}
                       style={{

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, ArrowRight, Shield, Fingerprint } from "lucide-react";
 import type { View } from "../App";
+import { api } from "../imports/api";
 
 interface Props { onNavigate: (v: View) => void; }
 
@@ -15,22 +16,26 @@ export default function AuthPage({ onNavigate }: Props) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("");
     if (mode === "login") {
       if (!email.trim() || !password) {
         setError("Please enter both email and password.");
         return;
       }
-      if (email.trim() !== "varma@yopmail.com" || password !== "admin") {
-        setError("Invalid email or password. Please try again.");
-        return;
-      }
       setLoading(true);
-      setTimeout(() => {
+      try {
+        const data = await api.auth.login(email, password);
         setLoading(false);
-        setMode("mfa");
-      }, 1200);
+        if (data.requiresMFA) {
+          setMode("mfa");
+        } else {
+          onNavigate("hub");
+        }
+      } catch (err: any) {
+        setLoading(false);
+        setError(err.message || "Invalid credentials.");
+      }
     } else {
       setLoading(true);
       setTimeout(() => {
@@ -40,22 +45,22 @@ export default function AuthPage({ onNavigate }: Props) {
     }
   };
 
-  const handleMFA = () => {
+  const handleMFA = async () => {
     setError("");
     const pin = otp.join("");
     if (pin.length < 6) {
       setError("Please enter the complete 6-digit PIN.");
       return;
     }
-    if (pin !== "909090") {
-      setError("Invalid PIN. Please try again.");
-      return;
-    }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await api.auth.verifyMfa(email, pin);
       setLoading(false);
       onNavigate("hub");
-    }, 1000);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || "MFA validation failed.");
+    }
   };
 
   const handleOtp = (i: number, v: string) => {
