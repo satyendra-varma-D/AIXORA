@@ -143,6 +143,15 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
     }
   }, [notification]);
 
+  useEffect(() => {
+    setSelectedLead(null);
+    setSelectedAccount(null);
+    setSelectedContact(null);
+    setSelectedOpportunity(null);
+    setSelectedQuotation(null);
+  }, [subModule]);
+
+
   const handleBulkSelect = (id: string) => {
     setBulkIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
@@ -1149,7 +1158,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
           ========================================================== */}
 
       {/* LEAD DETAIL PAGE */}
-      {selectedLead && (
+      {selectedLead && activeModule === "leads" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1259,7 +1268,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* ACCOUNT DETAIL PAGE */}
-      {selectedAccount && (
+      {selectedAccount && activeModule === "accounts" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button onClick={() => setSelectedAccount(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
@@ -1318,7 +1327,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* CONTACT DETAIL PAGE */}
-      {selectedContact && (
+      {selectedContact && activeModule === "contacts" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button onClick={() => setSelectedContact(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
@@ -1357,7 +1366,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* OPPORTUNITY DETAIL PAGE */}
-      {selectedOpportunity && (
+      {selectedOpportunity && activeModule === "opportunities" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button onClick={() => setSelectedOpportunity(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
@@ -1410,7 +1419,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
       )}
 
       {/* QUOTATION DETAIL PAGE */}
-      {selectedQuotation && (
+      {selectedQuotation && activeModule === "quotations" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button onClick={() => setSelectedQuotation(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 14 }}>

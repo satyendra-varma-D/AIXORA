@@ -102,6 +102,12 @@ export default function DiscoveryStudio({ subModule }: { subModule?: string }) {
     }
   }, [notification]);
 
+  useEffect(() => {
+    setSelectedSession(null);
+    setSelectedStory(null);
+  }, [tab]);
+
+
   const handleSaveForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (drawerMode === "session") {
@@ -283,7 +289,7 @@ export default function DiscoveryStudio({ subModule }: { subModule?: string }) {
       )}
 
       {/* DISCOVERY WORKSHOP DETAILED WORKSPACE */}
-      {selectedSession && (
+      {selectedSession && tab === "sessions" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -494,7 +500,7 @@ export default function DiscoveryStudio({ subModule }: { subModule?: string }) {
       )}
 
       {/* USER STORY DETAILED WORKSPACE */}
-      {selectedStory && (
+      {selectedStory && tab === "stories" && (
         <div style={{ padding: "28px 28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
