@@ -110,7 +110,15 @@ export default function AppHub({ onNavigate, theme, setTheme }: Props) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-bg)", fontFamily: "'Inter', sans-serif", color: "#F9FAFB", transition: "background-color 0.3s ease" }}>
+    <div style={{ 
+      minHeight: "100vh", 
+      background: "var(--color-bg)", 
+      fontFamily: "'Inter', sans-serif", 
+      color: "#F9FAFB", 
+      transition: "background-color 0.3s ease",
+      backgroundSize: "40px 40px",
+      backgroundImage: "linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px)"
+    }}>
       {/* Header */}
       <div style={{
         height: 60, display: "flex", alignItems: "center", justifyContent: "space-between",

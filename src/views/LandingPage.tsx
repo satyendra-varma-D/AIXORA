@@ -115,7 +115,15 @@ export default function LandingPage({ onNavigate, theme, setTheme }: Props) {
   };
 
   return (
-    <div style={{ background: "#06080F", color: "#F9FAFB", minHeight: "100vh", fontFamily: "'Outfit', 'Inter', sans-serif", overflowX: "hidden" }}>
+    <div style={{ 
+      background: "#06080F", 
+      color: "#F9FAFB", 
+      minHeight: "100vh", 
+      fontFamily: "'Outfit', 'Inter', sans-serif", 
+      overflowX: "hidden",
+      backgroundSize: "40px 40px",
+      backgroundImage: "linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px)"
+    }}>
       
       {/* Background Neural Particles */}
       <NeuralNetworkBackground />
@@ -131,7 +139,7 @@ export default function LandingPage({ onNavigate, theme, setTheme }: Props) {
         background: "rgba(6, 8, 15, 0.7)", backdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: 72, display: "flex", alignItems: "center", justifyBetween: "space-between" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: 72, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           
           <LogoMark />
           
