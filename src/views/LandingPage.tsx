@@ -669,8 +669,8 @@ function NeuralNetworkBackground() {
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "rgba(99, 102, 241, 0.03)";
-      ctx.strokeStyle = "rgba(99, 102, 241, 0.03)";
+      ctx.fillStyle = "rgba(99, 102, 241, 0.25)";
+      ctx.strokeStyle = "rgba(99, 102, 241, 0.08)";
 
       for (let i = 0; i < count; i++) {
         const p1 = particles[i];
