@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
-import {
+import { useState, useEffect, useRef } from "react";
+import { 
   ArrowRight, Zap, Globe, ChevronRight, Star,
   BarChart3, Code2, Users, Brain, Layers, Shield,
-  Play, Sparkles, TrendingUp, Activity, Palette
+  Play, Sparkles, TrendingUp, Activity, Palette,
+  Database, Cpu, MessageSquare, Terminal, Award, HelpCircle,
+  Network, Share2, Server, Key, Eye, CheckCircle2, X
 } from "lucide-react";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import type { View, Theme } from "../App";
 
 interface Props {
@@ -12,131 +15,149 @@ interface Props {
   setTheme: (t: Theme) => void;
 }
 
-const NAV_LINKS = ["Platform", "Applications", "Solutions", "Pricing", "Resources"];
+// ==========================================
+// STATIC DATA & CONFIGS
+// ==========================================
 
-const STATS = [
-  { value: "98.9%", label: "Platform Uptime" },
-  { value: "2.4M+", label: "AI Actions Daily" },
-  { value: "340+", label: "Enterprise Clients" },
-  { value: "68%", label: "Faster Delivery" },
+const NAV_LINKS = [
+  { label: "Architecture", target: "architecture" },
+  { label: "Studios", target: "studios" },
+  { label: "Intelligence Logs", target: "command-center" },
+  { label: "Technology Stack", target: "tech-showcase" }
 ];
 
-const FEATURES = [
-  {
-    icon: Brain, color: "#5B5CEB",
-    title: "AI-First Architecture",
-    desc: "Every workflow is augmented by context-aware AI that learns your team's delivery patterns and accelerates outcomes.",
-  },
-  {
-    icon: Layers, color: "#7C3AED",
-    title: "Unified Delivery OS",
-    desc: "From lead discovery to post-deployment support — one coherent platform replaces 14 disconnected tools.",
-  },
-  {
-    icon: BarChart3, color: "#00D4FF",
-    title: "Real-Time Intelligence",
-    desc: "Executive dashboards, predictive forecasting, and AI-generated insights surface risk before it becomes cost.",
-  },
-  {
-    icon: Shield, color: "#10B981",
-    title: "Enterprise Security",
-    desc: "SOC 2 Type II, ISO 27001, SSO/SAML, RBAC, audit logs, and zero-trust architecture built in.",
-  },
-  {
-    icon: Code2, color: "#F59E0B",
-    title: "AI Code Generation",
-    desc: "Generate boilerplate, refactor debt, review PRs, and auto-document — directly from requirements to commits.",
-  },
-  {
-    icon: Globe, color: "#EF4444",
-    title: "Ecosystem Integration",
-    desc: "Native connectors to GitHub, Jira, Slack, Azure, AWS, Salesforce, and 200+ enterprise tools.",
-  },
+const INTEGRATIONS = [
+  "SAP", "Oracle", "Microsoft", "Salesforce", "HubSpot", "Jira", "GitHub", 
+  "Slack", "Teams", "Zoom", "AWS", "Azure", "GCP", "Snowflake", "Power BI", 
+  "Tableau", "Confluence", "ServiceNow", "Zendesk", "Workday"
 ];
 
-const APPS = [
-  { name: "AI Market Intelligence", icon: TrendingUp, color: "#5B5CEB" },
-  { name: "AI Sales CRM", icon: Users, color: "#7C3AED" },
-  { name: "AI SDR", icon: Zap, color: "#00D4FF" },
-  { name: "Meeting Intelligence", icon: Activity, color: "#10B981" },
-  { name: "Discovery Studio", icon: Sparkles, color: "#F59E0B" },
-  { name: "Development Studio", icon: Code2, color: "#EF4444" },
-  { name: "DevOps Studio", icon: Layers, color: "#5B5CEB" },
-  { name: "Executive Center", icon: BarChart3, color: "#7C3AED" },
+const TECH_CATEGORIES = [
+  {
+    title: "AI Orchestration Layer",
+    techs: ["CrewAI", "LangGraph", "Semantic Kernel", "Claude 3.5 Sonnet", "GPT-4o", "DeepSeek-R1", "Gemini 1.5 Pro", "Llama 3.3"]
+  },
+  {
+    title: "Knowledge & Memory Fabric",
+    techs: ["Qdrant", "Pinecone", "pgvector", "Knowledge Graphs", "Hybrid Vector Search", "Contextual RAG"]
+  },
+  {
+    title: "Enterprise Core Stack",
+    techs: ["React 19", "Vite", "TypeScript", "Tailwind CSS v4", "FastAPI", "Express Serverless", "Docker & K8s"]
+  },
+  {
+    title: "Compliance & Security",
+    techs: ["SOC 2 Type II", "AES-256 Encryption", "RBAC", "SAML SSO", "Audit Logs", "JWT Authentication"]
+  }
 ];
 
-const TESTIMONIALS = [
-  {
-    quote: "AIXORA collapsed our software delivery cycle from 18 months to 6. The AI-generated BRDs and automated test suites alone saved us 3 FTEs.",
-    name: "Sarah Chen", role: "CTO", company: "NovaTech Solutions", avatar: "SC",
-  },
-  {
-    quote: "We evaluated SAP, ServiceNow, and Azure DevOps. Nothing comes close to the intelligence and cohesion AIXORA brings to an IT services business.",
-    name: "Marcus Williams", role: "VP Engineering", company: "Apex Digital", avatar: "MW",
-  },
-  {
-    quote: "The Executive Center alone justifies the investment. I can see delivery health, revenue forecast, and client satisfaction on one screen.",
-    name: "Priya Patel", role: "CEO", company: "InfraCore Ltd", avatar: "PP",
-  },
+const PLATFORM_MODULES = [
+  { id: "market", name: "Market Intelligence Studio", desc: "Autonomous scanning of competitor pricing, market shifts, and regional demand dynamics.", aiCap: "Sentiment Analysis & Trend Prediction", color: "#5B5CEB" },
+  { id: "crm", name: "Sales Intelligence Studio", desc: "Enterprise CRM with automated lead scoring, opportunity tracking, and quotation drafts.", aiCap: "Autonomous Deal Confidence Scoring", color: "#7C3AED" },
+  { id: "discovery", name: "Discovery Studio", desc: "Replace workshops by converting natural conversation into epic, feature, and story backlogs.", aiCap: "Contextual Acceptance Criteria Generation", color: "#00D4FF" },
+  { id: "design", name: "Solution Architecture Studio", desc: "Generate complete design system guidelines, database schemas, and API contracts.", aiCap: "Schema Mapping & API Syncing", color: "#10B981" },
+  { id: "engineering", name: "Engineering Studio", desc: "Automate code reviews, boilerplate generation, and legacy refactoring workflows.", aiCap: "Autonomous Coding & Refactoring Agents", color: "#F59E0B" },
+  { id: "quality", name: "Quality Studio", desc: "Generates automated Cypress/Selenium test suites directly from requirements specifications.", aiCap: "Self-healing Test Runner Agents", color: "#EF4444" },
+  { id: "success", name: "Customer Success Studio", desc: "Monitor support ticketing streams, client health scores, and customer churn risk indicators.", aiCap: "Proactive Escalation Warnings", color: "#EC4899" },
+  { id: "knowledge", name: "Knowledge Hub", desc: "Unified enterprise memory. Automatically ingest documents, databases, and chats into one RAG layer.", aiCap: "Knowledge Graph Generation", color: "#6366F1" },
+  { id: "executive", name: "Executive Center", desc: "Unified dashboards tracing delivery velocity, forecast accuracies, and operational bottlenecks.", aiCap: "Revenue Velocity Projection", color: "#14B8A6" },
+  { id: "admin", name: "Administration Studio", desc: "Enterprise configuration center. Establish SSO, audit logs, and custom workflow policies.", aiCap: "System Security Auditing", color: "#8B5CF6" }
 ];
+
+const COMPARISONS = {
+  traditional: [
+    "Disconnected SaaS silos",
+    "Manual data copying & entry",
+    "No contextual business memory",
+    "Context-switching between 14 tools",
+    "Reactive, delayed decision making"
+  ],
+  aixora: [
+    "Unified system topology",
+    "Autonomous agent orchestration",
+    "Global Knowledge & Memory Fabric",
+    "One dashboard for all workflows",
+    "Proactive, continuous intelligence"
+  ]
+};
+
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
 
 export default function LandingPage({ onNavigate, theme, setTheme }: Props) {
-  const [scrolled, setScrolled] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const scaleProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  const [commandLogs, setCommandLogs] = useState<any[]>([]);
 
+  // Simulate command center real-time ticker
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
+    const systems = ["SAP ERP", "Salesforce CRM", "GitHub Repos", "Jira Backlog", "Slack Channel"];
+    const actions = ["Ingested ledger balance sheet", "Updated opportunity score to 92%", "Reviewed pull request #409", "Drafted epic user stories", "Summarized stakeholder transcript"];
+    
+    const interval = setInterval(() => {
+      const newLog = {
+        time: new Date().toLocaleTimeString(),
+        system: systems[Math.floor(Math.random() * systems.length)],
+        action: actions[Math.floor(Math.random() * actions.length)],
+        tokens: Math.floor(Math.random() * 8000) + 1200,
+        status: Math.random() > 0.15 ? "SUCCESS" : "AUDITED"
+      };
+      setCommandLogs(prev => [newLog, ...prev.slice(0, 7)]);
+    }, 2500);
+
+    return () => clearInterval(interval);
   }, []);
 
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div style={{ background: "var(--color-bg)", color: "#F9FAFB", minHeight: "100vh", fontFamily: "'Inter', sans-serif", transition: "background-color 0.3s ease" }}>
-      {/* Ambient background */}
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{
-          position: "absolute", top: "-20%", left: "10%", width: 800, height: 800,
-          background: "radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)",
-          borderRadius: "50%",
-        }} />
-        <div style={{
-          position: "absolute", top: "30%", right: "-10%", width: 600, height: 600,
-          background: "radial-gradient(ellipse, rgba(124,58,237,0.10) 0%, transparent 70%)",
-          borderRadius: "50%",
-        }} />
-        <div style={{
-          position: "absolute", bottom: "10%", left: "30%", width: 500, height: 500,
-          background: "radial-gradient(ellipse, rgba(0,212,255,0.07) 0%, transparent 70%)",
-          borderRadius: "50%",
-        }} />
-      </div>
+    <div style={{ background: "#06080F", color: "#F9FAFB", minHeight: "100vh", fontFamily: "'Outfit', 'Inter', sans-serif", overflowX: "hidden" }}>
+      
+      {/* Background Neural Particles */}
+      <NeuralNetworkBackground />
+
+      {/* Top Reading Progress Bar */}
+      <motion.div 
+        style={{ scaleX: scaleProgress, transformOrigin: "0%", height: 3, background: "linear-gradient(90deg, var(--color-primary), var(--color-secondary))", position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000 }} 
+      />
 
       {/* Navbar */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        transition: "all 0.3s",
-        background: scrolled ? "var(--color-surface)" : "transparent",
-        backdropFilter: scrolled ? "blur(24px)" : "none",
-        borderBottom: scrolled ? "1px solid var(--color-border)" : "none",
+        background: "rgba(6, 8, 15, 0.7)", backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: 72, display: "flex", alignItems: "center", justifyBetween: "space-between" }}>
+          
           <LogoMark />
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          
+          {/* Nav Links */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 auto" }}>
             {NAV_LINKS.map(l => (
-              <button key={l} style={{ background: "none", border: "none", color: "#9CA3AF", fontSize: 14, fontWeight: 500, padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", transition: "color 0.2s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#F9FAFB")}
+              <button 
+                key={l.label} 
+                onClick={() => scrollToSection(l.target)}
+                style={{ background: "none", border: "none", color: "#9CA3AF", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 8, cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
                 onMouseLeave={e => (e.currentTarget.style.color = "#9CA3AF")}
-              >{l}</button>
+              >
+                {l.label}
+              </button>
             ))}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             {/* Theme Selector */}
             <div style={{ position: "relative" }}>
               <button onClick={() => setThemeOpen(!themeOpen)} style={{
-                background: "none", border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 8, width: 36, height: 36, cursor: "pointer", display: "flex",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 9, width: 38, height: 38, cursor: "pointer", display: "flex",
                 alignItems: "center", justifyContent: "center", color: "#9CA3AF", transition: "all 0.2s"
-              }} title="Change Theme">
+              }}>
                 <Palette size={16} />
               </button>
               {themeOpen && (
@@ -183,168 +204,362 @@ export default function LandingPage({ onNavigate, theme, setTheme }: Props) {
               )}
             </div>
 
-            <button onClick={() => onNavigate("auth")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "#F9FAFB", fontSize: 14, fontWeight: 500, padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--color-primary)"; e.currentTarget.style.color = "var(--color-primary)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#F9FAFB"; }}
-            >Sign In</button>
+            <button onClick={() => onNavigate("auth")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "#F9FAFB", fontSize: 13, fontWeight: 600, padding: "9px 20px", borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}>Sign In</button>
             <button onClick={() => onNavigate("auth")} style={{
               background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "#fff",
-              fontSize: 14, fontWeight: 600, padding: "8px 20px", borderRadius: 8, cursor: "pointer", border: "none", fontFamily: "'Inter', sans-serif",
-              boxShadow: "0 4px 16px rgba(99,102,241,0.35)", transition: "all 0.2s",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(99,102,241,0.45)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(99,102,241,0.35)"; }}
-            >Book Demo</button>
+              fontSize: 13, fontWeight: 700, padding: "9px 22px", borderRadius: 10, cursor: "pointer", border: "none",
+              boxShadow: "0 4px 20px rgba(99,102,241,0.25)", transition: "all 0.2s",
+            }}>Start Building</button>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section style={{ position: "relative", zIndex: 1, paddingTop: 160, paddingBottom: 120, textAlign: "center", padding: "160px 24px 120px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(91,92,235,0.12)", border: "1px solid rgba(91,92,235,0.25)", borderRadius: 100, padding: "6px 16px", marginBottom: 32, color: "#A5A6F6", fontSize: 13, fontWeight: 500 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5B5CEB", display: "inline-block" }} className="animate-pulse-glow" />
-          Now in general availability — AI Software Delivery Suite v3.0
-          <ChevronRight size={14} />
-        </div>
-        <h1 style={{ fontSize: "clamp(42px, 7vw, 84px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "0 auto 24px", maxWidth: 900 }}>
-          The AI Operating System<br />
-          <span style={{ background: "linear-gradient(135deg, #5B5CEB 0%, #00D4FF 60%, #7C3AED 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-            for Software Delivery
-          </span>
-        </h1>
-        <p style={{ fontSize: 20, color: "#9CA3AF", maxWidth: 640, margin: "0 auto 48px", lineHeight: 1.7, fontWeight: 400 }}>
-          AIXORA unifies sales, discovery, architecture, development, QA, and customer success into one coherent intelligence layer — eliminating the chaos of disconnected tools.
-        </p>
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={() => onNavigate("auth")} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            background: "linear-gradient(135deg, #5B5CEB, #7C3AED)", color: "#fff",
-            fontSize: 16, fontWeight: 700, padding: "14px 32px", borderRadius: 12, cursor: "pointer", border: "none", fontFamily: "'Inter', sans-serif",
-            boxShadow: "0 8px 32px rgba(91,92,235,0.4)", transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 48px rgba(91,92,235,0.5)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(91,92,235,0.4)"; }}
-          >
-            Start Free Trial <ArrowRight size={18} />
-          </button>
-          <button onClick={() => onNavigate("hub")} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            background: "rgba(255,255,255,0.05)", color: "#F9FAFB", border: "1px solid rgba(255,255,255,0.12)",
-            fontSize: 16, fontWeight: 600, padding: "14px 32px", borderRadius: 12, cursor: "pointer", fontFamily: "'Inter', sans-serif", transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
-          >
-            <Play size={16} /> Live Demo
-          </button>
-        </div>
-
-        {/* Hero Dashboard Preview */}
-        <div style={{ position: "relative", maxWidth: 1100, margin: "80px auto 0", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px rgba(91,92,235,0.2)" }}>
-          <HeroDashboardPreview onNavigate={onNavigate} />
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section style={{ position: "relative", zIndex: 1, padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 40, textAlign: "center" }}>
-          {STATS.map(s => (
-            <div key={s.label}>
-              <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: "-0.04em", background: "linear-gradient(135deg, #5B5CEB, #00D4FF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{s.value}</div>
-              <div style={{ color: "#6B7280", fontSize: 14, fontWeight: 500, marginTop: 6 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section style={{ position: "relative", zIndex: 1, padding: "120px 24px" }}>
+      {/* HERO SECTION */}
+      <section style={{ position: "relative", zIndex: 1, padding: "160px 24px 80px", textAlign: "center" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 72 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 20, color: "#00D4FF", fontSize: 13, fontWeight: 500 }}>
-              Platform Capabilities
-            </div>
-            <h2 style={{ fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 16px" }}>
-              Built for every stage of delivery
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 100, padding: "6px 18px", marginBottom: 32, color: "#A5A6F6", fontSize: 13, fontWeight: 600 }}
+          >
+            <Sparkles size={14} className="animate-spin" style={{ color: "var(--color-primary)" }} />
+            The Operating System for Enterprise AI
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            style={{ fontSize: "clamp(46px, 7.5vw, 92px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-0.04em", margin: "0 auto 24px", maxWidth: 1050 }}
+          >
+            The Enterprise<br />
+            <span style={{ background: "linear-gradient(135deg, #6366F1 0%, #06B6D4 50%, #8B5CF6 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Intelligence Layer
+            </span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            style={{ fontSize: 20, color: "#9CA3AF", maxWidth: 740, margin: "0 auto 48px", lineHeight: 1.65, fontWeight: 400 }}
+          >
+            Connect every enterprise system. Orchestrate autonomous AI agents. Transform data into decisions. Run your business through one intelligence platform.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.45 }}
+            style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 80 }}
+          >
+            <button onClick={() => onNavigate("auth")} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "#fff",
+              fontSize: 15, fontWeight: 700, padding: "16px 36px", borderRadius: 12, cursor: "pointer", border: "none",
+              boxShadow: "0 10px 30px rgba(99,102,241,0.35)", transition: "all 0.2s"
+            }}>
+              Start Building <ArrowRight size={16} />
+            </button>
+            <button onClick={() => onNavigate("hub")} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: "rgba(255,255,255,0.03)", color: "#F9FAFB", border: "1px solid rgba(255,255,255,0.08)",
+              fontSize: 15, fontWeight: 700, padding: "16px 36px", borderRadius: 12, cursor: "pointer", transition: "all 0.2s"
+            }}>
+              Book Executive Demo
+            </button>
+          </motion.div>
+
+          {/* Interactive Topology Data Flow Animation */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            style={{ position: "relative", maxWidth: 1050, margin: "0 auto", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(11, 15, 26, 0.65)", backdropFilter: "blur(24px)", padding: 40 }}
+          >
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 28 }}>
+              Continuous Autonomous Execution Visualization
+            </h3>
+            <HeroTopologyFlow />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CONTINUOUS LOGO WALL */}
+      <section style={{ position: "relative", zIndex: 1, padding: "40px 0", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(6, 8, 15, 0.4)", overflow: "hidden" }}>
+        <div style={{ display: "flex", width: "200%", gap: 50 }} className="animate-logo-scroll">
+          <div style={{ display: "flex", justifyContent: "space-around", width: "50%", gap: 40, flexShrink: 0 }}>
+            {INTEGRATIONS.map((logo, idx) => (
+              <span key={idx} style={{ fontSize: 15, fontWeight: 850, color: "#4B5563", letterSpacing: "-0.02em" }}>{logo}</span>
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-around", width: "50%", gap: 40, flexShrink: 0 }}>
+            {INTEGRATIONS.map((logo, idx) => (
+              <span key={`dup-${idx}`} style={{ fontSize: 15, fontWeight: 850, color: "#4B5563", letterSpacing: "-0.02em" }}>{logo}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* POSITIONING (Traditional vs AIXORA) */}
+      <section id="positioning" style={{ position: "relative", zIndex: 1, padding: "120px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Product Positioning</span>
+            <h2 style={{ fontSize: "clamp(30px, 4.5vw, 54px)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: 8 }}>
+              The Composable Enterprise Core
             </h2>
-            <p style={{ color: "#6B7280", fontSize: 18, maxWidth: 560, margin: "0 auto" }}>
-              15 integrated applications. One platform. Zero context switching.
-            </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
-            {FEATURES.map(f => (
-              <FeatureCard key={f.title} {...f} />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+            <div style={{ background: "rgba(239, 68, 68, 0.02)", border: "1px solid rgba(239, 68, 68, 0.12)", borderRadius: 20, padding: 36 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+                <X size={18} /> Traditional Stack
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {COMPARISONS.traditional.map((item, idx) => (
+                  <div key={idx} style={{ fontSize: 14, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444" }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: "rgba(16, 185, 129, 0.02)", border: "1px solid rgba(16, 185, 129, 0.15)", borderRadius: 20, padding: 36, boxShadow: "0 10px 40px rgba(16, 185, 129, 0.05)" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#10B981", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+                <CheckCircle2 size={18} /> AIXORA Intelligence
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {COMPARISONS.aixora.map((item, idx) => (
+                  <div key={idx} style={{ fontSize: 14, color: "#E5E7EB", display: "flex", alignItems: "center", gap: 12, fontWeight: 600 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ENTERPRISE ARCHITECTURE LAYERED DIAGRAM */}
+      <section id="architecture" style={{ position: "relative", zIndex: 1, padding: "80px 24px 120px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>System Architecture</span>
+            <h2 style={{ fontSize: "clamp(30px, 4.5vw, 54px)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: 8 }}>
+              Enterprise Intelligence Schema
+            </h2>
+            <p style={{ color: "#6B7280", fontSize: 16, marginTop: 8 }}>How AIXORA connects multi-layer architectures from data source to executive outcomes.</p>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {[
+              { title: "Layer 5: Business Outcomes", items: ["Sales CRM Boost", "Automated QA Suites", "Predictive Logistics", "Executive Dashboards", "Engineering Studio"], color: "#10B981" },
+              { title: "Layer 4: Agent Reasoning Engine", items: ["CrewAI Planning", "LangGraph State Managers", "Decision Workflows", "Execution Handlers"], color: "#F59E0B" },
+              { title: "Layer 3: Knowledge Fabric & Vector DBs", items: ["Hybrid RAG System", "pgvector Memory", "Knowledge Graphs", "Qdrant Clusters"], color: "#00D4FF" },
+              { title: "Layer 2: AIXORA Intelligence Core", items: ["Model Router", "LLM APIs (Claude, GPT, DeepSeek)", "Semantic Parsers"], color: "#7C3AED" },
+              { title: "Layer 1: Connected Enterprise Systems", items: ["SAP ERP", "Salesforce Cloud", "Jira API", "GitHub Repos", "Database Nodes"], color: "#5B5CEB" }
+            ].map((layer, idx) => (
+              <motion.div 
+                key={idx}
+                whileHover={{ scale: 1.005, y: -2 }}
+                style={{ 
+                  background: "rgba(17, 24, 39, 0.6)", 
+                  border: `1px solid rgba(255,255,255,0.06)`, 
+                  borderRadius: 16, 
+                  padding: "24px 30px", 
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+                  <strong style={{ fontSize: 15, color: layer.color, minWidth: 260 }}>{layer.title}</strong>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {layer.items.map(item => (
+                      <span key={item} style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "#D1D5DB" }}>
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* App Grid */}
-      <section style={{ position: "relative", zIndex: 1, padding: "0 24px 120px" }}>
+      {/* PLATFORM MODULES (ENTERPRISE STUDIOS) */}
+      <section id="studios" style={{ position: "relative", zIndex: 1, padding: "0 24px 120px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <h2 style={{ fontSize: "clamp(28px, 3vw, 44px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 12px" }}>15 Applications. Infinite Scale.</h2>
-            <p style={{ color: "#6B7280", fontSize: 17 }}>Each app is enterprise-grade. Together, they're unstoppable.</p>
+          
+          <div style={{ textAlign: "center", marginBottom: 72 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Unified Product Center</span>
+            <h2 style={{ fontSize: "clamp(30px, 4.5vw, 54px)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: 8 }}>
+              Enterprise Intelligence Studios
+            </h2>
+            <p style={{ color: "#6B7280", fontSize: 17, marginTop: 10 }}>Every business department powered by dedicated autonomous workspaces.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
-            {APPS.map(app => (
-              <AppCard key={app.name} {...app} onClick={() => onNavigate("hub")} />
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Testimonials */}
-      <section style={{ position: "relative", zIndex: 1, padding: "0 24px 120px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <h2 style={{ fontSize: "clamp(28px, 3vw, 44px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 12px" }}>Trusted by Engineering Leaders</h2>
-          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
-            {TESTIMONIALS.map(t => (
-              <TestimonialCard key={t.name} {...t} />
+            {PLATFORM_MODULES.map(studio => (
+              <motion.div 
+                key={studio.id}
+                whileHover={{ y: -4 }}
+                style={{ 
+                  background: "rgba(17, 24, 39, 0.65)", 
+                  border: "1px solid rgba(255,255,255,0.06)", 
+                  borderRadius: 18, 
+                  padding: 28,
+                  position: "relative",
+                  overflow: "hidden"
+                }}
+              >
+                {/* Glowing Corner Badge */}
+                <div style={{ position: "absolute", top: 12, right: 12, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: `${studio.color}15`, color: studio.color, border: `1px solid ${studio.color}30` }}>
+                  ACTIVE STUDIO
+                </div>
+
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: `${studio.color}15`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <Brain size={20} color={studio.color} />
+                </div>
+
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{studio.name}</h3>
+                <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.6, marginBottom: 20 }}>{studio.desc}</p>
+
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 14, fontSize: 11, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
+                  <Zap size={11} /> AI Capability: {studio.aiCap}
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ position: "relative", zIndex: 1, padding: "0 24px 160px" }}>
+      {/* LIVE COMMAND CENTER */}
+      <section id="command-center" style={{ position: "relative", zIndex: 1, padding: "0 24px 120px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Real-time Operations</span>
+            <h2 style={{ fontSize: "clamp(30px, 4.5vw, 54px)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: 8 }}>
+              Live Platform Operations Log
+            </h2>
+            <p style={{ color: "#6B7280", fontSize: 16, marginTop: 10 }}>Trace continuous AI queries, memory utilization, and active pipeline metrics.</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24 }}>
+            {/* Live Counters */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[
+                { label: "Active Agent Sessions", val: "1,492", change: "+12% this hour" },
+                { label: "Connected System Nodes", val: "228", change: "100% operational" },
+                { label: "AI Workflows Processed", val: "4.2M", change: "Avg latency: 42ms" }
+              ].map((c, idx) => (
+                <div key={idx} style={{ background: "rgba(17, 24, 39, 0.7)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: 22 }}>
+                  <span style={{ fontSize: 12, color: "#6B7280" }}>{c.label}</span>
+                  <div style={{ fontSize: 32, fontWeight: 900, color: "#fff", marginTop: 6 }}>{c.val}</div>
+                  <span style={{ fontSize: 11, color: "#10B981", marginTop: 4, display: "block" }}>{c.change}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Live Log Ticker */}
+            <div style={{ background: "#090C15", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 14, fontFamily: "'JetBrains Mono', monospace" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--color-primary)" }}>SYSTEM OUTPUTS STREAM</span>
+                <span style={{ fontSize: 11, color: "#10B981" }}>● SYSTEM NORMAL</span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, minHeight: 280 }}>
+                {commandLogs.length === 0 ? (
+                  <div style={{ color: "#4B5563", fontSize: 12 }}>Awaiting incoming server queries...</div>
+                ) : (
+                  commandLogs.map((log, idx) => (
+                    <div key={idx} style={{ fontSize: 11, color: "#9CA3AF", display: "flex", justifyContent: "space-between", borderBottom: "1px dotted rgba(255,255,255,0.03)", paddingBottom: 6 }}>
+                      <span>[{log.time}] <strong style={{ color: "#fff" }}>{log.system}</strong>: {log.action}</span>
+                      <span style={{ color: log.status === "SUCCESS" ? "#10B981" : "#F59E0B" }}>{log.status} ({log.tokens} tk)</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* COMPACT TECHNOLOGY SHOWCASE */}
+      <section id="tech-showcase" style={{ position: "relative", zIndex: 1, padding: "0 24px 120px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Technology Stack</span>
+            <h2 style={{ fontSize: "clamp(30px, 4.5vw, 54px)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: 8 }}>
+              Celebrated Enterprise Stack
+            </h2>
+            <p style={{ color: "#6B7280", fontSize: 16, marginTop: 10 }}>Engineered on enterprise-grade infrastructure with maximum zero-trust security compliance.</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            {TECH_CATEGORIES.map((cat, idx) => (
+              <div key={idx} style={{ background: "rgba(17, 24, 39, 0.6)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 28 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>{cat.title}</h3>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {cat.techs.map(t => (
+                    <span key={t} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", color: "#D1D5DB" }}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CALL TO ACTION */}
+      <section style={{ position: "relative", zIndex: 1, padding: "0 24px 140px" }}>
         <div style={{
-          maxWidth: 860, margin: "0 auto", textAlign: "center", padding: "80px 48px",
-          background: "linear-gradient(135deg, rgba(91,92,235,0.15), rgba(124,58,237,0.1))",
-          border: "1px solid rgba(91,92,235,0.25)", borderRadius: 24,
-          boxShadow: "0 0 80px rgba(91,92,235,0.2)",
+          maxWidth: 960, margin: "0 auto", textAlign: "center", padding: "80px 48px",
+          background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(124,58,237,0.06))",
+          border: "1px solid rgba(99,102,241,0.2)", borderRadius: 24,
+          boxShadow: "0 0 100px rgba(99,102,241,0.15)",
         }}>
-          <div className="animate-pulse-glow" style={{ fontSize: 48, marginBottom: 24 }}>⚡</div>
-          <h2 style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 16px" }}>
-            Ready to modernize<br />your delivery operation?
+          <h2 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 16px" }}>
+            The future of enterprise<br />intelligence is composable.
           </h2>
-          <p style={{ color: "#9CA3AF", fontSize: 18, marginBottom: 40 }}>
-            Join 340+ IT service companies already delivering 3x faster with AIXORA.
+          <p style={{ color: "#9CA3AF", fontSize: 18, marginBottom: 40, maxWidth: 600, margin: "0 auto 40px" }}>
+            Initialize your custom intelligence workflows. Establish autonomous agent topologies in minutes.
           </p>
-          <button onClick={() => onNavigate("auth")} style={{
-            display: "inline-flex", alignItems: "center", gap: 12,
-            background: "linear-gradient(135deg, #5B5CEB, #7C3AED)", color: "#fff",
-            fontSize: 18, fontWeight: 700, padding: "16px 40px", borderRadius: 12, cursor: "pointer", border: "none", fontFamily: "'Inter', sans-serif",
-            boxShadow: "0 8px 40px rgba(91,92,235,0.5)", transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}
-          >
-            Get Started Free <ArrowRight size={20} />
-          </button>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={() => onNavigate("auth")} style={{
+              background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "#fff",
+              fontSize: 15, fontWeight: 700, padding: "16px 40px", borderRadius: 12, cursor: "pointer", border: "none",
+              boxShadow: "0 8px 30px rgba(99,102,241,0.4)"
+            }}>
+              Start Free Build
+            </button>
+            <button onClick={() => onNavigate("auth")} style={{
+              background: "rgba(255,255,255,0.03)", color: "#fff", border: "1px solid rgba(255,255,255,0.08)",
+              fontSize: 15, fontWeight: 700, padding: "16px 40px", borderRadius: 12, cursor: "pointer"
+            }}>
+              Book Architecture Session
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)", padding: "48px 24px 40px" }}>
+      <footer style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)", padding: "48px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
           <LogoMark />
-          <div style={{ color: "#4B5563", fontSize: 13 }}>© 2025 AIXORA, Inc. All rights reserved.</div>
+          <div style={{ color: "#4B5563", fontSize: 12 }}>© 2026 AIXORA, Inc. All rights reserved. SOC 2 Type II Certified.</div>
           <div style={{ display: "flex", gap: 24 }}>
-            {["Privacy", "Terms", "Security", "Status"].map(l => (
-              <button key={l} style={{ background: "none", border: "none", color: "#6B7280", fontSize: 13, cursor: "pointer", fontFamily: "'Inter', sans-serif" }}>{l}</button>
+            {["Privacy Policy", "Terms of Service", "Trust Center", "API Docs"].map(l => (
+              <button key={l} style={{ background: "none", border: "none", color: "#6B7280", fontSize: 13, cursor: "pointer" }}>{l}</button>
             ))}
           </div>
         </div>
@@ -353,191 +568,223 @@ export default function LandingPage({ onNavigate, theme, setTheme }: Props) {
   );
 }
 
+// ==========================================
+// SUB-COMPONENTS
+// ==========================================
+
 function LogoMark() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <div style={{
-        width: 32, height: 32, borderRadius: 8,
-        background: "linear-gradient(135deg, #5B5CEB, #7C3AED)",
+        width: 34, height: 34, borderRadius: 9,
+        background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 16px rgba(91,92,235,0.4)",
+        boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
       }}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
           <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" stroke="white" strokeWidth="1.5" fill="none" />
           <path d="M9 2L9 16" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
           <path d="M2.5 6L15.5 12" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
           <path d="M15.5 6L2.5 12" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
         </svg>
       </div>
-      <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.02em", color: "#F9FAFB" }}>
-        AIX<span style={{ color: "#5B5CEB" }}>ORA</span>
+      <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: "-0.03em", color: "#F9FAFB" }}>
+        AIX<span style={{ color: "var(--color-primary)" }}>ORA</span>
       </span>
     </div>
   );
 }
 
-function FeatureCard({ icon: Icon, color, title, desc }: { icon: any; color: string; title: string; desc: string }) {
-  const [hovered, setHovered] = useState(false);
+// Neural Interactive Background Canvas
+function NeuralNetworkBackground() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const particles: Array<{ x: number; y: number; vx: number; vy: number; radius: number }> = [];
+    const count = 75;
+
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        radius: Math.random() * 2 + 1
+      });
+    }
+
+    let animationFrameId: number;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "rgba(99, 102, 241, 0.03)";
+      ctx.strokeStyle = "rgba(99, 102, 241, 0.03)";
+
+      for (let i = 0; i < count; i++) {
+        const p1 = particles[i];
+        p1.x += p1.vx;
+        p1.y += p1.vy;
+
+        if (p1.x < 0 || p1.x > width) p1.vx *= -1;
+        if (p1.y < 0 || p1.y > height) p1.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let j = i + 1; j < count; j++) {
+          const p2 = particles[j];
+          const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+          if (dist < 130) {
+            ctx.lineWidth = (1 - dist / 130) * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? "rgba(28, 35, 51, 0.9)" : "rgba(22, 27, 38, 0.7)",
-        border: `1px solid ${hovered ? "rgba(91,92,235,0.25)" : "rgba(255,255,255,0.06)"}`,
-        borderRadius: 16, padding: 28, cursor: "pointer",
-        transition: "all 0.25s", transform: hovered ? "translateY(-4px)" : "none",
-        boxShadow: hovered ? "0 20px 48px rgba(0,0,0,0.4)" : "0 4px 16px rgba(0,0,0,0.2)",
-      }}
-    >
-      <div style={{ width: 48, height: 48, borderRadius: 12, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-        <Icon size={24} color={color} />
-      </div>
-      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#F9FAFB" }}>{title}</div>
-      <div style={{ color: "#6B7280", fontSize: 14, lineHeight: 1.65 }}>{desc}</div>
-    </div>
+    <canvas 
+      ref={canvasRef} 
+      style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, opacity: 0.8 }} 
+    />
   );
 }
 
-function AppCard({ name, icon: Icon, color, onClick }: { name: string; icon: any; color: string; onClick: () => void }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? "rgba(28, 35, 51, 0.9)" : "rgba(22, 27, 38, 0.5)",
-        border: `1px solid ${hovered ? color + "40" : "rgba(255,255,255,0.06)"}`,
-        borderRadius: 14, padding: "20px 22px", cursor: "pointer",
-        transition: "all 0.25s", display: "flex", alignItems: "center", gap: 14,
-        transform: hovered ? "translateY(-2px)" : "none",
-      }}
-    >
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Icon size={20} color={color} />
-      </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "#E5E7EB", lineHeight: 1.3 }}>{name}</div>
-      {hovered && <ChevronRight size={14} color="#6B7280" style={{ marginLeft: "auto" }} />}
-    </div>
-  );
-}
+// Hero Interactive Flow Diagram (Canvas / SVG node connections)
+function HeroTopologyFlow() {
+  const nodes = [
+    { label: "SAP / SF", x: 100, y: 150, color: "#5B5CEB" },
+    { label: "GitHub", x: 100, y: 220, color: "#7C3AED" },
+    { label: "Databases", x: 100, y: 290, color: "#00D4FF" },
+    { label: "AIXORA Core", x: 450, y: 220, color: "var(--color-primary)" },
+    { label: "Reasoning Agents", x: 750, y: 150, color: "#F59E0B" },
+    { label: "Autonomous Actions", x: 750, y: 290, color: "#10B981" }
+  ];
 
-function TestimonialCard({ quote, name, role, company, avatar }: { quote: string; name: string; role: string; company: string; avatar: string }) {
   return (
-    <div style={{
-      background: "rgba(22, 27, 38, 0.7)", border: "1px solid rgba(255,255,255,0.06)",
-      borderRadius: 16, padding: 28,
-    }}>
-      <div style={{ display: "flex", gap: 2, marginBottom: 20 }}>
-        {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="#F59E0B" color="#F59E0B" />)}
-      </div>
-      <p style={{ color: "#D1D5DB", fontSize: 15, lineHeight: 1.7, marginBottom: 24, fontStyle: "italic" }}>"{quote}"</p>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: "50%",
-          background: "linear-gradient(135deg, #5B5CEB, #7C3AED)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 13, fontWeight: 700, color: "#fff",
-        }}>{avatar}</div>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 14, color: "#F9FAFB" }}>{name}</div>
-          <div style={{ fontSize: 12, color: "#6B7280" }}>{role} · {company}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+    <div style={{ position: "relative", height: 420, width: "100%", overflow: "hidden" }}>
+      {/* Connector lines SVG */}
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+        {/* Source nodes to AIXORA Core */}
+        <motion.path 
+          d="M 170 150 L 450 220" 
+          stroke="rgba(99, 102, 241, 0.4)" 
+          strokeWidth="2" 
+          fill="none" 
+          strokeDasharray="8 6"
+          animate={{ strokeDashoffset: [-100, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        />
+        <motion.path 
+          d="M 170 220 L 450 220" 
+          stroke="rgba(99, 102, 241, 0.4)" 
+          strokeWidth="2" 
+          fill="none" 
+          strokeDasharray="8 6"
+          animate={{ strokeDashoffset: [-100, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        />
+        <motion.path 
+          d="M 170 290 L 450 220" 
+          stroke="rgba(99, 102, 241, 0.4)" 
+          strokeWidth="2" 
+          fill="none" 
+          strokeDasharray="8 6"
+          animate={{ strokeDashoffset: [-100, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        />
 
-function HeroDashboardPreview({ onNavigate }: { onNavigate: (v: View) => void }) {
-  return (
-    <div
-      onClick={() => onNavigate("hub")}
-      style={{
-        cursor: "pointer",
-        background: "#111827",
-        minHeight: 480,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Top bar */}
-      <div style={{ height: 44, background: "#0D1117", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", paddingLeft: 16, gap: 8 }}>
-        {["#EF4444", "#F59E0B", "#10B981"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
-        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 6, padding: "3px 16px", fontSize: 11, color: "#4B5563" }}>
-            app.aixora.io / executive-center
-          </div>
-        </div>
-      </div>
-      {/* Dashboard preview */}
-      <div style={{ display: "flex", height: "calc(100% - 44px)", minHeight: 436 }}>
-        {/* Sidebar */}
-        <div style={{ width: 52, background: "#0D1117", borderRight: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 16, gap: 12 }}>
-          {["#5B5CEB", "#7C3AED", "#00D4FF", "#10B981", "#F59E0B"].map((c, i) => (
-            <div key={i} style={{ width: 32, height: 32, borderRadius: 8, background: i === 0 ? c + "30" : "rgba(255,255,255,0.04)", border: i === 0 ? `1px solid ${c}50` : "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: 14, height: 14, borderRadius: 3, background: i === 0 ? c : "rgba(255,255,255,0.15)" }} />
-            </div>
-          ))}
-        </div>
-        {/* Main content */}
-        <div style={{ flex: 1, padding: 20, overflow: "hidden" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#9CA3AF", marginBottom: 16 }}>Executive Center · Q4 Overview</div>
-          {/* KPI row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-            {[
-              { label: "Revenue MTD", value: "$2.4M", delta: "+18%", color: "#10B981" },
-              { label: "Active Projects", value: "47", delta: "+6", color: "#5B5CEB" },
-              { label: "Delivery Health", value: "92%", delta: "+3%", color: "#00D4FF" },
-              { label: "Open Risks", value: "8", delta: "-2", color: "#F59E0B" },
-            ].map(k => (
-              <div key={k.label} style={{ background: "rgba(22,27,38,0.8)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 10, color: "#6B7280", marginBottom: 6 }}>{k.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "#F9FAFB", marginBottom: 4 }}>{k.value}</div>
-                <div style={{ fontSize: 10, color: k.color, fontWeight: 600 }}>{k.delta} this month</div>
-              </div>
-            ))}
-          </div>
-          {/* Chart area */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-            <div style={{ background: "rgba(22,27,38,0.8)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 10, color: "#6B7280", marginBottom: 12 }}>Revenue Trend</div>
-              <div style={{ height: 100, display: "flex", alignItems: "flex-end", gap: 6 }}>
-                {[40, 55, 48, 70, 65, 82, 75, 90, 85, 95, 88, 100].map((h, i) => (
-                  <div key={i} style={{ flex: 1, height: `${h}%`, background: i === 11 ? "linear-gradient(180deg, #5B5CEB, #7C3AED)" : "rgba(91,92,235,0.25)", borderRadius: "3px 3px 0 0", transition: "all 0.2s" }} />
-                ))}
-              </div>
-            </div>
-            <div style={{ background: "rgba(22,27,38,0.8)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 10, color: "#6B7280", marginBottom: 12 }}>Pipeline by Stage</div>
-              {[
-                { label: "Prospecting", w: "85%", color: "#5B5CEB" },
-                { label: "Proposal", w: "62%", color: "#7C3AED" },
-                { label: "Negotiation", w: "40%", color: "#00D4FF" },
-                { label: "Closed Won", w: "28%", color: "#10B981" },
-              ].map(p => (
-                <div key={p.label} style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 9, color: "#6B7280", marginBottom: 3 }}>{p.label}</div>
-                  <div style={{ height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 3 }}>
-                    <div style={{ height: "100%", width: p.w, background: p.color, borderRadius: 3, transition: "width 0.8s" }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Click overlay */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(9,12,21,0)", transition: "background 0.2s" }}
-        onMouseEnter={e => (e.currentTarget.style.background = "rgba(9,12,21,0.6)")}
-        onMouseLeave={e => (e.currentTarget.style.background = "rgba(9,12,21,0)")}
-      >
-        <div style={{ background: "rgba(91,92,235,0.9)", borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, opacity: 0, transition: "opacity 0.2s" }}
-          className="preview-enter-btn"
+        {/* AIXORA Core to Agents & Actions */}
+        <motion.path 
+          d="M 450 220 L 750 150" 
+          stroke="rgba(245, 158, 11, 0.4)" 
+          strokeWidth="2" 
+          fill="none" 
+          strokeDasharray="8 6"
+          animate={{ strokeDashoffset: [-100, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        />
+        <motion.path 
+          d="M 450 220 L 750 290" 
+          stroke="rgba(16, 185, 129, 0.4)" 
+          strokeWidth="2" 
+          fill="none" 
+          strokeDasharray="8 6"
+          animate={{ strokeDashoffset: [-100, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        />
+      </svg>
+
+      {/* Nodes mapping */}
+      {nodes.map((node, idx) => (
+        <motion.div 
+          key={idx}
+          style={{
+            position: "absolute",
+            left: `${node.x}px`,
+            top: `${node.y}px`,
+            transform: "translate(-50%, -50%)",
+            background: "rgba(17, 24, 39, 0.9)",
+            border: `2px solid ${node.color}`,
+            borderRadius: 12,
+            padding: "10px 18px",
+            boxShadow: `0 0 15px ${node.color}30`,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            cursor: "pointer"
+          }}
+          whileHover={{ scale: 1.08 }}
         >
-          <Play size={16} /> Enter Platform
-        </div>
-      </div>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: node.color }} />
+          <span style={{ fontSize: 12, fontWeight: 750, color: "#fff", letterSpacing: "0.02em" }}>{node.label}</span>
+        </motion.div>
+      ))}
+
+      {/* Glow pulse indicators */}
+      <motion.div 
+        style={{
+          position: "absolute",
+          left: "450px",
+          top: "220px",
+          transform: "translate(-50%, -50%)",
+          width: 140,
+          height: 140,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)",
+          zIndex: -1
+        }}
+        animate={{ scale: [1, 1.25, 1] }}
+        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+      />
     </div>
   );
 }

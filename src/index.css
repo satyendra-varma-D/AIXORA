@@ -207,3 +207,13 @@ body {
   border-left: 2px solid #5B5CEB;
   color: #F9FAFB;
 }
+
+@keyframes logoScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-logo-scroll {
+  animation: logoScroll 30s linear infinite;
+}
+
