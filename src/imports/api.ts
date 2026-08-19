@@ -1,4 +1,4 @@
-// Centralized API Service for AIXORA SaaS
+// Centralized API Service for ON IT SaaS
 
 const API_BASE_URL = '/api';
 
@@ -33,7 +33,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...(options.headers || {}),
   };
 
-  const token = localStorage.getItem('aixora_jwt');
+  const token = localStorage.getItem('onit_jwt');
   if (token) {
     (options.headers as any)['Authorization'] = `Bearer ${token}`;
   }
@@ -43,8 +43,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     
     // If unauthorized or session expired
     if (res.status === 401) {
-      localStorage.removeItem('aixora_jwt');
-      localStorage.removeItem('aixora_user');
+      localStorage.removeItem('onit_jwt');
+      localStorage.removeItem('onit_user');
       if (onSessionExpiredCallback) {
         onSessionExpiredCallback();
       }
@@ -81,8 +81,8 @@ export const api = {
         body: JSON.stringify({ email, otp }),
       });
       if (data.token) {
-        localStorage.setItem('aixora_jwt', data.token);
-        localStorage.setItem('aixora_user', JSON.stringify(data.user));
+        localStorage.setItem('onit_jwt', data.token);
+        localStorage.setItem('onit_user', JSON.stringify(data.user));
       }
       return data;
     },
@@ -97,8 +97,8 @@ export const api = {
       } catch (e) {
         // Suppress logout network errors
       }
-      localStorage.removeItem('aixora_jwt');
-      localStorage.removeItem('aixora_user');
+      localStorage.removeItem('onit_jwt');
+      localStorage.removeItem('onit_user');
     }
   },
 

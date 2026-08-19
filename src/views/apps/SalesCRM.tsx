@@ -50,8 +50,8 @@ const INITIAL_ACTIVITIES = [
 ];
 
 const INITIAL_QUOTES = [
-  { id: "QT-2026-01", company: "IndoAgri Perkasa", value: "$480,000", discount: "$20,000", tax: "$48,000", status: "Approved", date: "2026-02-01", version: "v1.2", products: "AIXORA Core License (x500), Custom DB Middleware (x1)" },
-  { id: "QT-2026-02", company: "Bumi Lestari Refineries", value: "$280,000", discount: "None", tax: "$28,000", status: "Draft", date: "2026-02-03", version: "v1.0", products: "AIXORA Core License (x300)" }
+  { id: "QT-2026-01", company: "IndoAgri Perkasa", value: "$480,000", discount: "$20,000", tax: "$48,000", status: "Approved", date: "2026-02-01", version: "v1.2", products: "ON IT Core License (x500), Custom DB Middleware (x1)" },
+  { id: "QT-2026-02", company: "Bumi Lestari Refineries", value: "$280,000", discount: "None", tax: "$28,000", status: "Draft", date: "2026-02-03", version: "v1.0", products: "ON IT Core License (x300)" }
 ];
 
 const REVENUE_DATA = [
@@ -1564,7 +1564,7 @@ export default function SalesCRM({ subModule }: { subModule?: string }) {
                   </div>
                   <div style={{ marginBottom: 18 }}>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#D1D5DB", marginBottom: 6 }}>Line Item Products</label>
-                    <input type="text" required onChange={e => setFormData({ ...formData, products: e.target.value })} placeholder="e.g. AIXORA Core License (x500)" style={{ width: "100%", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }} />
+                    <input type="text" required onChange={e => setFormData({ ...formData, products: e.target.value })} placeholder="e.g. ON IT Core License (x500)" style={{ width: "100%", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--color-border)", color: "#fff" }} />
                   </div>
                 </>
               )}

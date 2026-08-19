@@ -881,6 +881,7 @@ export default function MarketIntelligence({ subModule }: { subModule?: string }
     setDetailTab("overview");
     setActiveCompanyProfile(null);
     setActiveDecisionMaker(null);
+    setIsCreatingWizard(false);
   }, [activeModule]);
   
   // Advanced Config

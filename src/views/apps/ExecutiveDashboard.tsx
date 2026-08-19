@@ -141,7 +141,7 @@ export default function ExecutiveDashboard() {
         </Card>
 
         {/* AI Insights */}
-        <Card title="AI Recommendations" subtitle="Powered by AIXORA Intelligence" action="">
+        <Card title="AI Recommendations" subtitle="Powered by ON IT Intelligence" action="">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
               { icon: "⚡", text: "ERP Migration is 3 days behind schedule. Recommend adding 1 senior developer to unblock the database migration phase.", severity: "high" },

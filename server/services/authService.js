@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-aixora-2026-delivery-platform';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'another-super-secret-refresh-key-for-aixora-2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-onit-2026-delivery-platform';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'another-super-secret-refresh-key-for-onit-2026';
 
 export const authService = {
   verifyPassword: async (password, passwordHash) => {

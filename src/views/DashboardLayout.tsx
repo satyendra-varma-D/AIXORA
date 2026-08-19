@@ -1,114 +1,151 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-  TrendingUp, Users, Sparkles, Code2,
-  BarChart3, BookOpen, Settings,
-  Cpu, TestTube, HeartHandshake,
   Search, Bell, ChevronDown,
   ChevronLeft, ChevronRight as ChevRight,
-  Home, Palette, LayoutGrid
+  Home, Palette, LayoutGrid, Sparkles
 } from "lucide-react";
 import type { View, AppModule, Theme } from "../App";
-import ExecutiveDashboard from "./apps/ExecutiveDashboard";
-import SalesCRM from "./apps/SalesCRM";
-import DiscoveryStudio from "./apps/DiscoveryStudio";
-import DesignStudio from "./apps/DesignStudio";
-import EngineeringStudio from "./apps/EngineeringStudio";
-import QualityStudio from "./apps/QualityStudio";
-import MarketIntelligence from "./apps/MarketIntelligence";
+import GrowWorkspace from "./apps/GrowWorkspace";
+import DiscoverWorkspace from "./apps/DiscoverWorkspace";
+import DeliverWorkspace from "./apps/DeliverWorkspace";
+import PeopleWorkspace from "./apps/PeopleWorkspace";
+import MoneyWorkspace from "./apps/MoneyWorkspace";
+import ServeWorkspace from "./apps/ServeWorkspace";
 import GenericAppDashboard from "./apps/GenericAppDashboard";
 import { api } from "../imports/api";
+import { CORE_APPS } from "../components/hub/HubData";
 
 interface Props {
-  activeApp: AppModule;
-  onNavigate: (v: View) => void;
-  onSwitchApp: (app: AppModule) => void;
   theme: Theme;
   setTheme: (t: Theme) => void;
 }
 
-const APP_CONFIGS = [
-  { id: "market" as AppModule, name: "AI Market Intelligence", icon: TrendingUp, color: "#5B5CEB", section: "Pipeline" },
-  { id: "crm" as AppModule, name: "AI Sales CRM", icon: Users, color: "#7C3AED", section: "Pipeline" },
-  { id: "discovery" as AppModule, name: "AI Discovery Studio", icon: Sparkles, color: "#F59E0B", section: "Delivery" },
-  { id: "design" as AppModule, name: "AI Design Studio", icon: Cpu, color: "#5B5CEB", section: "Delivery" },
-  { id: "engineering" as AppModule, name: "AI Engineering Studio", icon: Code2, color: "#00D4FF", section: "Engineering" },
-  { id: "quality" as AppModule, name: "AI Quality Studio", icon: TestTube, color: "#10B981", section: "Engineering" },
-  { id: "success" as AppModule, name: "Customer Success", icon: HeartHandshake, color: "#EF4444", section: "Operations" },
-  { id: "knowledge" as AppModule, name: "Knowledge Hub", icon: BookOpen, color: "#5B5CEB", section: "Operations" },
-  { id: "executive" as AppModule, name: "Executive Center", icon: BarChart3, color: "#7C3AED", section: "Management" },
-  { id: "admin" as AppModule, name: "Administration", icon: Settings, color: "#6B7280", section: "Management" },
-];
+const APP_CONFIGS = CORE_APPS.map(app => ({
+  id: app.id as AppModule,
+  name: app.name + " (" + app.label + ")",
+  icon: app.icon,
+  color: app.color,
+  section: "Platform"
+}));
 
-const APP_MODULES: Record<AppModule, { id: string; label: string }[]> = {
-  market: [
+const APP_MODULES: Record<string, { id: string; label: string }[]> = {
+  grow: [
     { id: "dashboard", label: "Dashboard" },
-    { id: "tasks", label: "Tasks" },
-    { id: "campaigns", label: "Research Campaigns" },
-    { id: "companies", label: "Companies" },
-    { id: "people", label: "Contacts" },
-    { id: "review", label: "Qualification Queue" },
-    { id: "history", label: "Export History" },
-    { id: "settings", label: "Settings" }
-  ],
-  crm: [
-    { id: "dashboard", label: "Dashboard" },
+    { id: "market-intelligence", label: "Market Intelligence" },
     { id: "leads", label: "Leads" },
     { id: "accounts", label: "Accounts" },
     { id: "contacts", label: "Contacts" },
     { id: "opportunities", label: "Opportunities" },
     { id: "activities", label: "Activities" },
-    { id: "quotations", label: "Quotations" },
-    { id: "reports", label: "Reports" },
-    { id: "settings", label: "Settings" }
+    { id: "pipeline", label: "Pipeline" },
+    { id: "proposals", label: "Proposals" },
+    { id: "estimation", label: "Estimation" },
+    { id: "forecast", label: "Forecast" },
+    { id: "customer-intelligence", label: "Customer Intelligence" },
+    { id: "ai", label: "AI" },
+    { id: "reports", label: "Reports" }
   ],
-  discovery: [
-    { id: "sessions", label: "Discovery Sessions" },
-    { id: "documents", label: "BRD / FRD / SRS" },
+  discover: [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "discovery", label: "Discovery" },
+    { id: "meetings", label: "Meetings" },
+    { id: "requirements", label: "Requirements" },
+    { id: "processes", label: "Processes" },
     { id: "stories", label: "User Stories" },
-    { id: "ai", label: "AI Writing Assistant" }
+    { id: "solution", label: "Solution" },
+    { id: "scope", label: "Scope" },
+    { id: "estimation", label: "Estimation" },
+    { id: "sow", label: "Proposal / SOW" },
+    { id: "traceability", label: "Traceability" },
+    { id: "documents", label: "Documents" },
+    { id: "ai", label: "AI" },
+    { id: "reports", label: "Reports" }
   ],
-  design: [
-    { id: "flows", label: "User Flows" },
-    { id: "wireframes", label: "Wireframes & Mockups" },
-    { id: "reviews", label: "Design Reviews" }
+  deliver: [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "portfolio", label: "Portfolio" },
+    { id: "projects", label: "Projects" },
+    { id: "planning", label: "Planning" },
+    { id: "wbs", label: "WBS" },
+    { id: "schedule", label: "Schedule" },
+    { id: "agile", label: "Agile" },
+    { id: "kanban", label: "Kanban" },
+    { id: "tasks", label: "Tasks" },
+    { id: "risks", label: "Risks" },
+    { id: "issues", label: "Issues" },
+    { id: "dependencies", label: "Dependencies" },
+    { id: "changes", label: "Changes" },
+    { id: "engineering", label: "Engineering" },
+    { id: "qa", label: "QA" },
+    { id: "testing", label: "Testing" },
+    { id: "defects", label: "Defects" },
+    { id: "uat", label: "UAT" },
+    { id: "releases", label: "Releases" },
+    { id: "deployment", label: "Deployment" },
+    { id: "ai", label: "AI" },
+    { id: "reports", label: "Reports" }
   ],
-  engineering: [
-    { id: "architecture", label: "Solution Architecture" },
-    { id: "database", label: "Database Design" },
-    { id: "apis", label: "API Design" },
-    { id: "coding", label: "AI Coding" }
-  ],
-  quality: [
-    { id: "tests", label: "Test Cases" },
-    { id: "bugs", label: "Bug Tracking" },
-    { id: "deployments", label: "CI/CD & Deployments" }
-  ],
-  success: [
-    { id: "tickets", label: "Open Tickets" },
-    { id: "sla", label: "SLA Compliance" },
-    { id: "health", label: "Client Health" }
-  ],
-  knowledge: [
-    { id: "search", label: "Search" },
-    { id: "items", label: "Knowledge Items" },
-    { id: "graph", label: "AI Graph" }
-  ],
-  executive: [
-    { id: "revenue", label: "Revenue" },
-    { id: "forecast", label: "Pipeline Forecast" },
-    { id: "compliance", label: "SLA Avg" }
-  ],
-  admin: [
-    { id: "users", label: "Active Users" },
+  people: [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "employees", label: "Employees" },
     { id: "teams", label: "Teams" },
-    { id: "security", label: "Security" },
-    { id: "audit", label: "Audit Logs" }
+    { id: "skills", label: "Skills" },
+    { id: "demand", label: "Demand" },
+    { id: "capacity", label: "Capacity" },
+    { id: "allocation", label: "Allocation" },
+    { id: "scheduling", label: "Scheduling" },
+    { id: "timesheets", label: "Timesheets" },
+    { id: "expenses", label: "Expenses" },
+    { id: "utilization", label: "Utilization" },
+    { id: "bench", label: "Bench" },
+    { id: "workforce", label: "Workforce Planning" },
+    { id: "ai", label: "AI" },
+    { id: "reports", label: "Reports" }
+  ],
+  money: [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "commercials", label: "Commercials" },
+    { id: "contracts", label: "Contracts" },
+    { id: "rate-cards", label: "Rate Cards" },
+    { id: "budgets", label: "Budgets" },
+    { id: "costs", label: "Costs" },
+    { id: "revenue", label: "Revenue" },
+    { id: "billing", label: "Billing" },
+    { id: "invoices", label: "Invoices" },
+    { id: "receivables", label: "Receivables" },
+    { id: "profitability", label: "Profitability" },
+    { id: "forecast", label: "Forecast" },
+    { id: "approvals", label: "Approvals" },
+    { id: "ai", label: "AI" },
+    { id: "reports", label: "Reports" }
+  ],
+  serve: [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "customers", label: "Customers" },
+    { id: "desk", label: "Service Desk" },
+    { id: "tickets", label: "Tickets" },
+    { id: "incidents", label: "Incidents" },
+    { id: "problems", label: "Problems" },
+    { id: "changes", label: "Changes" },
+    { id: "slas", label: "SLAs" },
+    { id: "catalog", label: "Service Catalog" },
+    { id: "knowledge", label: "Knowledge" },
+    { id: "success", label: "Customer Success" },
+    { id: "health", label: "Customer Health" },
+    { id: "warranty", label: "Warranty" },
+    { id: "amc", label: "AMC" },
+    { id: "escalations", label: "Escalations" },
+    { id: "ai", label: "AI" },
+    { id: "reports", label: "Reports" }
   ]
 };
 
-export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, theme, setTheme }: Props) {
+export default function DashboardLayout({ theme, setTheme }: Props) {
+  const navigate = useNavigate();
+  const { appId = "grow", moduleId = "dashboard", recordId } = useParams();
+  
   const [collapsed, setCollapsed] = useState(false);
-  const [activeModule, setActiveModule] = useState("dashboard");
   const [aiOpen, setAiOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
@@ -116,12 +153,12 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [aiMsg, setAiMsg] = useState("");
   const [aiHistory, setAiHistory] = useState<{ role: "user" | "ai"; text: string }[]>([
-    { role: "ai", text: "Hello! I'm your AIXORA AI Assistant. I can help you generate documents, analyze data, create tasks, summarize meetings, and navigate the platform. What would you like to do?" }
+    { role: "ai", text: "Hello! I'm your ON IT AI Assistant. I can help you generate documents, analyze data, create tasks, summarize meetings, and navigate the platform. What would you like to do?" }
   ]);
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string }>({ name: "Sarah Chen", email: "sarah@company.com" });
 
   useEffect(() => {
-    const saved = localStorage.getItem("aixora_user");
+    const saved = localStorage.getItem("onit_user");
     if (saved) {
       try {
         setCurrentUser(JSON.parse(saved));
@@ -129,17 +166,9 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
     }
   }, []);
 
-  // Reset active module when app switches
-  useEffect(() => {
-    const modules = APP_MODULES[activeApp] || [];
-    if (modules.length > 0) {
-      setActiveModule(modules[0].id);
-    }
-  }, [activeApp]);
-
-  const currentApp = APP_CONFIGS.find(a => a.id === activeApp)!;
-  const currentModules = APP_MODULES[activeApp] || [];
-  const currentModuleLabel = currentModules.find(m => m.id === activeModule)?.label || "Dashboard";
+  const currentApp = APP_CONFIGS.find(a => a.id === appId) || APP_CONFIGS[0];
+  const currentModules = APP_MODULES[appId] || APP_MODULES["grow"];
+  const currentModuleLabel = currentModules.find(m => m.id === moduleId)?.label || "Dashboard";
 
   const sendAI = () => {
     if (!aiMsg.trim()) return;
@@ -172,13 +201,13 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
               <path d="M15.5 6L2.5 12" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
             </svg>
           </div>
-          {!collapsed && <span style={{ fontSize: 14, fontWeight: 850, letterSpacing: "-0.03em", whiteSpace: "nowrap" }}>AIX<span style={{ color: "var(--color-primary)" }}>ORA</span></span>}
+          {!collapsed && <span style={{ fontSize: 14, fontWeight: 850, letterSpacing: "-0.03em", whiteSpace: "nowrap" }}>ON<span style={{ color: "var(--color-primary)" }}> IT</span></span>}
         </div>
 
         {/* Navigation list */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "16px 8px", overflowY: "auto" }}>
           {/* App Hub Link */}
-          <NavItem icon={Home} label="App Hub" collapsed={collapsed} active={false} color="#9CA3AF" onClick={() => onNavigate("hub")} />
+          <NavItem icon={Home} label="App Hub" collapsed={collapsed} active={false} color="#9CA3AF" onClick={() => navigate("/hub")} />
           
           <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "8px 12px" }} />
 
@@ -192,20 +221,20 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
           {currentModules.map(m => (
             <button
               key={m.id}
-              onClick={() => setActiveModule(m.id)}
+              onClick={() => navigate(`/app/${appId}/${m.id}`)}
               style={{
                 width: "100%", display: "flex", alignItems: "center", 
                 padding: collapsed ? "10px 14px" : "8px 12px", 
                 borderRadius: 8,
-                border: "none", cursor: "pointer", fontSize: 13, fontWeight: activeModule === m.id ? 600 : 500,
-                background: activeModule === m.id ? "rgba(255,255,255,0.06)" : "transparent",
-                color: activeModule === m.id ? "#F9FAFB" : "#9CA3AF",
+                border: "none", cursor: "pointer", fontSize: 13, fontWeight: moduleId === m.id ? 600 : 500,
+                background: moduleId === m.id ? "rgba(255,255,255,0.06)" : "transparent",
+                color: moduleId === m.id ? "#F9FAFB" : "#9CA3AF",
                 textAlign: "left", transition: "all 0.15s",
                 justifyContent: collapsed ? "center" : "flex-start"
               }}
               title={collapsed ? m.label : undefined}
             >
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: activeModule === m.id ? currentApp.color : "transparent", marginRight: collapsed ? 0 : 10, display: "inline-block" }} />
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: moduleId === m.id ? currentApp.color : "transparent", marginRight: collapsed ? 0 : 10, display: "inline-block" }} />
               {!collapsed && m.label}
             </button>
           ))}
@@ -329,40 +358,25 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                      {[
-                        { title: "Pipeline", items: ["market", "crm"] },
-                        { title: "Delivery", items: ["discovery", "design"] },
-                        { title: "Engineering", items: ["engineering", "quality"] },
-                        { title: "Operations", items: ["success", "knowledge"] },
-                        { title: "Management", items: ["executive", "admin"] }
-                      ].map(group => (
-                        <div key={group.title}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-primary)", marginBottom: 6 }}>{group.title}</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                            {group.items.map(id => {
-                              const app = APP_CONFIGS.find(a => a.id === id);
-                              if (!app) return null;
-                              return (
-                                <button
-                                  key={id}
-                                  onClick={() => {
-                                    onSwitchApp(app.id as AppModule);
-                                    setSwitcherOpen(false);
-                                  }}
-                                  style={{
-                                    display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8,
-                                    border: "none", cursor: "pointer", background: activeApp === id ? "rgba(99,102,241,0.12)" : "transparent",
-                                    color: activeApp === id ? "#F9FAFB" : "#9CA3AF", textAlign: "left", fontFamily: "'Inter', sans-serif", fontSize: 12
-                                  }}
-                                >
-                                  <app.icon size={14} color={app.color} />
-                                  <span>{app.name}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {CORE_APPS.map(app => (
+                          <button
+                            key={app.id}
+                            onClick={() => {
+                              navigate(`/app/${app.id}/dashboard`);
+                              setSwitcherOpen(false);
+                            }}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8,
+                              border: "none", cursor: "pointer", background: appId === app.id ? "rgba(99,102,241,0.12)" : "transparent",
+                              color: appId === app.id ? "#F9FAFB" : "#9CA3AF", textAlign: "left", fontFamily: "'Inter', sans-serif", fontSize: 12
+                            }}
+                          >
+                            <app.icon size={14} color={app.color} />
+                            <span>{app.name}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 12, display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
@@ -417,7 +431,7 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
                       onClick={async () => {
                         setUserMenuOpen(false);
                         await api.auth.logout();
-                        onNavigate("landing");
+                        navigate("/");
                       }}
                       style={{
                         width: "100%", padding: "8px", borderRadius: 8, border: "none",
@@ -439,7 +453,7 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
         {/* Content Workspace Area */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-            <AppContent activeApp={activeApp} subModule={activeModule} />
+            <AppContent appId={appId} moduleId={moduleId} recordId={recordId} />
           </main>
 
           {/* AI Panel */}
@@ -455,7 +469,7 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
                     <Sparkles size={14} color="white" />
                   </div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>AIXORA AI</div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>ON IT AI</div>
                     <div style={{ fontSize: 11, color: "#10B981", display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
                       Online
@@ -489,7 +503,7 @@ export default function DashboardLayout({ activeApp, onNavigate, onSwitchApp, th
                 <input
                   value={aiMsg} onChange={e => setAiMsg(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && sendAI()}
-                  placeholder="Ask AIXORA AI..."
+                  placeholder="Ask ON IT AI..."
                   style={{
                     flex: 1, padding: "9px 13px", borderRadius: 9, background: "rgba(255,255,255,0.05)",
                     border: "1px solid rgba(255,255,255,0.08)", color: "#F9FAFB", fontSize: 13, outline: "none", fontFamily: "'Inter', sans-serif",
@@ -539,17 +553,19 @@ function NavItem({ icon: Icon, label, collapsed, active, color, onClick }: { ico
   );
 }
 
-function AppContent({ activeApp, subModule }: { activeApp: AppModule; subModule: string }) {
-  switch (activeApp) {
-    case "executive": return <ExecutiveDashboard />;
-    case "crm": return <SalesCRM subModule={subModule} />;
-    case "discovery": return <DiscoveryStudio subModule={subModule} />;
-    case "design": return <DesignStudio subModule={subModule} />;
-    case "engineering": return <EngineeringStudio subModule={subModule} />;
-    case "quality": return <QualityStudio subModule={subModule} />;
-    case "market": return <MarketIntelligence subModule={subModule} />;
-    default: return <GenericAppDashboard appId={activeApp} />;
-  }
+function AppContent({ appId, moduleId, recordId }: { appId: string; moduleId: string; recordId?: string }) {
+  const renderAppContent = () => {
+    switch (appId) {
+      case "grow": return <GrowWorkspace subModule={moduleId} recordId={recordId} />;
+      case "discover": return <DiscoverWorkspace subModule={moduleId} />;
+      case "deliver": return <DeliverWorkspace subModule={moduleId} />;
+      case "people": return <PeopleWorkspace subModule={moduleId} />;
+      case "money": return <MoneyWorkspace subModule={moduleId} />;
+      case "serve": return <ServeWorkspace subModule={moduleId} />;
+      default: return <GenericAppDashboard appId={appId as AppModule} />;
+    }
+  };
+  return renderAppContent();
 }
 
 function generateAIResponse(msg: string): string {
@@ -558,5 +574,5 @@ function generateAIResponse(msg: string): string {
   if (lower.includes("summar")) return "I've analyzed the recent meeting recordings and can provide a summary with action items, decisions made, and follow-up tasks. Should I also create tasks in the sprint board?";
   if (lower.includes("task")) return "I can create tasks from the requirements. I've identified 8 actionable items from the latest discovery session. Shall I assign them to the current sprint?";
   if (lower.includes("analyz")) return "Running analysis on your delivery pipeline... I can see 3 at-risk projects, 2 resource bottlenecks, and predict a 94% on-time delivery probability for the current sprint.";
-  return "I understand. Let me process that and provide you with the most relevant insights from your AIXORA workspace. Is there anything specific you'd like me to focus on?";
+  return "I understand. Let me process that and provide you with the most relevant insights from your ON IT workspace. Is there anything specific you'd like me to focus on?";
 }
